@@ -1,119 +1,135 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server);
 
 app.use(express.static(__dirname));
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/monopoly.html');
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/monopoly.html");
 });
 
 const rooms = {};
 
 const colors = [
-  'red',
-  'blue',
-  'green',
-  'yellow',
-  'purple',
-  'orange',
-  'pink',
-  'cyan',
-  'lime',
-  'white'
+  "red","blue","green","yellow","purple",
+  "orange","pink","cyan","lime","white"
 ];
 
-io.on('connection', socket => {
+// 40 cases
+function getRoom(id){
+  if(!rooms[id]){
+    rooms[id] = {
+      players: [],
+      turn: 0,
+      owner: Array(40).fill(null)
+    };
+  }
+  return rooms[id];
+}
 
-  console.log('Joueur connecté');
+io.on("connection", (socket) => {
 
-  socket.on('joinRoom', data => {
+  socket.on("joinRoom", ({username, roomId}) => {
 
-    const { username, roomId } = data;
+    const room = getRoom(roomId);
 
-    socket.join(roomId);
-
-    if(!rooms[roomId]) {
-
-      rooms[roomId] = {
-        players: [],
-        currentPlayer: 0
-      };
-    }
-
-    const room = rooms[roomId];
-
-    if(room.players.length >= 10) {
-      return;
-    }
+    if(room.players.length >= 10) return;
 
     room.players.push({
       id: socket.id,
-      username,
-      position: 0,
+      name: username,
+      pos: 0,
       money: 1500,
+      jail: false,
       color: colors[room.players.length]
     });
 
-    io.to(roomId).emit('gameState', room);
+    socket.join(roomId);
 
-    io.to(roomId).emit(
-      'log',
-      username + ' a rejoint la partie'
-    );
+    io.to(roomId).emit("gameState", room);
+    io.to(roomId).emit("log", username + " rejoint la partie");
   });
 
-  socket.on('rollDice', roomId => {
+  socket.on("rollDice", (roomId) => {
 
-    const room = rooms[roomId];
+    const room = getRoom(roomId);
+    const p = room.players[room.turn];
+    if(!p) return;
 
-    if(!room) return;
+    const d1 = Math.floor(Math.random()*6)+1;
+    const d2 = Math.floor(Math.random()*6)+1;
+    const total = d1 + d2;
 
-    const player = room.players[room.currentPlayer];
+    io.to(roomId).emit("log", `${p.name} fait ${total}`);
 
-    const dice =
-      Math.floor(Math.random() * 6) + 1 +
-      Math.floor(Math.random() * 6) + 1;
+    if(p.jail){
+      p.jail = false;
+      io.to(roomId).emit("log", `${p.name} sort de prison`);
+    } else {
 
-    player.position += dice;
+      p.pos += total;
 
-    if(player.position >= 40) {
+      if(p.pos >= 40){
+        p.pos -= 40;
+        p.money += 200;
+        io.to(roomId).emit("log", `${p.name} reçoit 200€ (départ)`);
+      }
 
-      player.position -= 40;
-      player.money += 200;
+      // PRISON CASE
+      if(p.pos === 30){
+        p.jail = true;
+        p.pos = 10;
+        io.to(roomId).emit("log", `${p.name} va en prison`);
+      }
+
+      // CASE PROPRIÉTÉ
+      const owner = room.owner[p.pos];
+
+      if(owner && owner !== p.id){
+        const rent = 100;
+        const o = room.players.find(x => x.id === owner);
+        if(o){
+          p.money -= rent;
+          o.money += rent;
+          io.to(roomId).emit("log", `${p.name} paye ${rent}€ à ${o.name}`);
+        }
+      }
     }
 
-    io.to(roomId).emit(
-      'log',
-      player.username + ' a fait ' + dice
-    );
+    room.turn++;
+    if(room.turn >= room.players.length) room.turn = 0;
 
-    room.currentPlayer++;
-
-    if(room.currentPlayer >= room.players.length) {
-      room.currentPlayer = 0;
-    }
-
-    io.to(roomId).emit('gameState', room);
+    io.to(roomId).emit("gameState", room);
   });
 
-  socket.on('buyProperty', roomId => {
+  socket.on("buy", (roomId) => {
 
-    io.to(roomId).emit(
-      'log',
-      'Achat de propriété'
-    );
+    const room = getRoom(roomId);
+    const p = room.players[room.turn];
+
+    if(!p) return;
+
+    const pos = p.pos;
+
+    if(!room.owner[pos]){
+      const price = 200;
+
+      if(p.money >= price){
+        p.money -= price;
+        room.owner[pos] = p.id;
+        io.to(roomId).emit("log", `${p.name} achète la case ${pos}`);
+      }
+    }
+
+    io.to(roomId).emit("gameState", room);
   });
 
 });
 
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log('Serveur lancé');
+server.listen(process.env.PORT || 3000, () => {
+  console.log("Monopoly V4 lancé");
 });
