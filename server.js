@@ -84,6 +84,7 @@ function sendToJail(room, player, roomId) {
   player.inJail = true;
   player.jailTurns = 0;
   room.doubleCount = 0;
+  room.hasRolled = false; // reset
   io.to(roomId).emit('log', `🚨 ${player.username} est envoyé en PRISON !`);
 }
 
@@ -104,7 +105,9 @@ io.on('connection', socket => {
         mortgaged: {},
         doubleCount: 0,
         gameStarted: false,
-        creatorId: socket.id
+        creatorId: socket.id,
+        hasRolled: false,     // Sécurité pour forcer 1 seul lancer par tour
+        lastRollWasDouble: false
       };
     }
 
@@ -168,11 +171,15 @@ io.on('connection', socket => {
 
     const activePlayer = room.players[room.currentPlayer];
     if (activePlayer.id !== socket.id) return;
+    if (room.hasRolled) return; // Empêche de lancer deux fois sans finir son tour
 
     const d1 = Math.floor(Math.random() * 6) + 1;
     const d2 = Math.floor(Math.random() * 6) + 1;
     const isDouble = (d1 === d2);
     const totalDice = d1 + d2;
+
+    room.hasRolled = true; // Verrouille le bouton lancer
+    room.lastRollWasDouble = isDouble;
 
     io.to(roomId).emit('diceRolled', { d1, d2 });
 
@@ -181,6 +188,7 @@ io.on('connection', socket => {
       if (isDouble) {
         activePlayer.inJail = false;
         activePlayer.jailTurns = 0;
+        room.lastRollWasDouble = false; // Un double pour sortir de prison ne fait pas rejouer
         io.to(roomId).emit('log', `🎲 DOUBLE ! ${activePlayer.username} fait un double ${d1} et s'évade de prison !`);
       } else {
         if (activePlayer.jailTurns >= 2) {
@@ -189,8 +197,8 @@ io.on('connection', socket => {
           activePlayer.jailTurns = 0;
           io.to(roomId).emit('log', `⏳ Prison terminée : Pas de double après 2 tours. ${activePlayer.username} paye 50$ d'amende.`);
         } else {
-          io.to(roomId).emit('log', `🔒 ${activePlayer.username} fait (${d1}-${d2}). Reste en prison. (Passé ${activePlayer.jailTurns}/2 tours)`);
-          room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
+          io.to(roomId).emit('log', `🔒 ${activePlayer.username} fait (${d1}-${d2}). Reste en prison.`);
+          // Reste en prison, l'action est finie, on doit cliquer sur "Fin de tour"
           io.to(roomId).emit('gameState', room);
           return;
         }
@@ -204,6 +212,8 @@ io.on('connection', socket => {
         io.to(roomId).emit('log', `🚨 Excès de vitesse ! 3 doubles d'affilée.`);
         sendToJail(room, activePlayer, roomId);
         room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
+        room.doubleCount = 0;
+        room.hasRolled = false;
         io.to(roomId).emit('gameState', room);
         return;
       }
@@ -223,6 +233,8 @@ io.on('connection', socket => {
 
     if (currentTile.type === 'go-to-jail') {
       sendToJail(room, activePlayer, roomId);
+      room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
+      room.hasRolled = false;
     } else if (currentTile.type === 'tax') {
       activePlayer.money -= currentTile.rent || 100;
       io.to(roomId).emit('log', `${activePlayer.username} s'acquitte des taxes.`);
@@ -232,7 +244,7 @@ io.on('connection', socket => {
 
       if (randomCard.action === 'money') activePlayer.money += randomCard.value;
       if (randomCard.action === 'move') { activePlayer.position = randomCard.value; activePlayer.money += 200; }
-      if (randomCard.action === 'jail') sendToJail(room, activePlayer, roomId);
+      if (randomCard.action === 'jail') { sendToJail(room, activePlayer, roomId); room.currentPlayer = (room.currentPlayer + 1) % room.players.length; room.hasRolled = false; }
       if (randomCard.action === 'jail-card') activePlayer.jailCards++;
     } 
     else if (room.owners[activePlayer.position] && room.owners[activePlayer.position] !== activePlayer.id) {
@@ -266,13 +278,26 @@ io.on('connection', socket => {
       }
     }
 
-    if (!isDouble || activePlayer.inJail) {
+    // ON NE CHANGE PLUS LE JOUEUR ICI ! On met simplement à jour l'état de la table.
+    io.to(roomId).emit('gameState', room);
+  });
+
+  // ÉVÉNEMENT AJOUTÉ : Pour passer volontairement son tour
+  socket.on('nextTurn', roomId => {
+    const room = rooms[roomId];
+    if (!room || !room.gameStarted) return;
+    const activePlayer = room.players[room.currentPlayer];
+    if (activePlayer.id !== socket.id) return;
+
+    if (!room.hasRolled) return; // Interdit de passer sans lancer
+
+    if (!room.lastRollWasDouble) {
       room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
     } else {
-      io.to(roomId).emit('log', `🎲 Grâce à son double, ${activePlayer.username} rejoue !`);
+      io.to(roomId).emit('log', `🎲 Grâce à son double, ${activePlayer.username} peut relancer !`);
     }
 
-    room.currentPlayer = room.currentPlayer % room.players.length;
+    room.hasRolled = false; // On libère le verrou pour le joueur suivant (ou le même si double)
     io.to(roomId).emit('gameState', room);
   });
 
@@ -280,7 +305,6 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room || !room.gameStarted) return;
 
-    // On cherche le joueur par son socket ID pour éviter les décalages de tour
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
 
