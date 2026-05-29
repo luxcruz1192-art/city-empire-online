@@ -128,7 +128,7 @@ io.on('connection', socket => {
 
   socket.on('startGame', roomId => {
     const room = rooms[roomId];
-    if (!room || room.creatorId !== socket.id || room.players.length < 2) return;
+    if (!room || room.gameStarted || room.players.length < 2) return;
     room.gameStarted = true;
     io.to(roomId).emit('gameState', room);
     io.to(roomId).emit('log', "🎮 La partie commence !");
@@ -187,7 +187,7 @@ io.on('connection', socket => {
           activePlayer.money -= 50;
           activePlayer.inJail = false;
           activePlayer.jailTurns = 0;
-          io.to(roomId).emit('log', `⏳ Prison terminée : Pas de double après 2 tours d'attente. ${activePlayer.username} paye 50$ d'amende.`);
+          io.to(roomId).emit('log', `⏳ Prison terminée : Pas de double après 2 tours. ${activePlayer.username} paye 50$ d'amende.`);
         } else {
           io.to(roomId).emit('log', `🔒 ${activePlayer.username} fait (${d1}-${d2}). Reste en prison. (Passé ${activePlayer.jailTurns}/2 tours)`);
           room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
@@ -225,7 +225,7 @@ io.on('connection', socket => {
       sendToJail(room, activePlayer, roomId);
     } else if (currentTile.type === 'tax') {
       activePlayer.money -= currentTile.rent || 100;
-      io.to(roomId).emit('log', `${activePlayer.username} s'acquitte des taxes de ${currentTile.rent || 100}$.`);
+      io.to(roomId).emit('log', `${activePlayer.username} s'acquitte des taxes.`);
     } else if (currentTile.type === 'chance') {
       const randomCard = chanceCards[Math.floor(Math.random() * chanceCards.length)];
       io.to(roomId).emit('log', `❓ CHANCE : ${randomCard.text}`);
@@ -256,7 +256,6 @@ io.on('connection', socket => {
           const stationsCount = countStationsOwned(room, owner.id);
           const stationRents = [0, 25, 50, 100, 200];
           rentToPay = stationRents[stationsCount] || 25;
-          io.to(roomId).emit('log', `🚂 ${owner.username} possède ${stationsCount} gares.`);
         } else if (currentTile.type === 'service') {
           rentToPay = currentTile.rents[0];
         }
@@ -281,8 +280,9 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room || !room.gameStarted) return;
 
-    const player = room.players[room.currentPlayer];
-    if (player.id !== socket.id) return;
+    // On cherche le joueur par son socket ID pour éviter les décalages de tour
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
 
     const tileIndex = player.position;
     const tile = boardProperties[tileIndex];
