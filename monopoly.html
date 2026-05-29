@@ -337,6 +337,15 @@ function render() {
   document.querySelectorAll('.player-token').forEach(p => p.remove());
   document.querySelectorAll('.building-badge').forEach(b => b.remove());
 
+  // GESTION CACHE DU BOUTON START
+  const startBtn = document.getElementById('start-btn-center');
+  if (gameState.gameStarted) {
+    startBtn.style.display = 'none'; // Fait disparaître le bouton start définitivement
+  } else {
+    // Seul le créateur voit le bouton au début
+    startBtn.style.display = (gameState.creatorId === socket.id) ? 'block' : 'none';
+  }
+
   monopolyData.forEach((data, index) => {
     const tile = document.getElementById(`tile-${index}`);
     const priceLabel = document.getElementById(`price-label-${index}`);
@@ -412,14 +421,19 @@ function render() {
     document.getElementById(`pions-case-${player.position}`).appendChild(token);
   });
 
+  // CORRECTION VERIFICATION ACHAT SUR CASE REELLE DU JOUEUR LOCAL
   const mySelf = gameState.players.find(p => p.id === socket.id);
   if (mySelf && gameState.gameStarted && activePlayer) {
     const currentTileData = monopolyData[mySelf.position];
     const isMyTurn = (activePlayer.id === socket.id);
+    const hasOwner = gameState.owners[mySelf.position];
 
-    if (currentTileData.price > 0 && !gameState.owners[mySelf.position]) {
+    if (currentTileData.price > 0 && !hasOwner) {
       buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
       buyBtn.disabled = !isMyTurn || (mySelf.money < currentTileData.price);
+    } else if (hasOwner) {
+      buyBtn.innerText = "Déjà acheté";
+      buyBtn.disabled = true;
     } else {
       buyBtn.innerText = "Non achetable";
       buyBtn.disabled = true;
