@@ -25,7 +25,6 @@
     .center { grid-column: 2 / 11; grid-row: 2 / 11; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 10px; text-align: center; position: relative; overflow: hidden; }
     .center h2 { font-size: min(3vh, 3vw); color: #facc15; }
 
-    /* CONTROLE PRISON INTERNE */
     .jail-controls { margin-top: 10px; display: none; gap: 8px; flex-direction: column; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; width: 90%; }
     .jail-btn { padding: 8px; font-size: 0.85rem; background: #e11d48; color: white; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
     .jail-btn:hover { background: #be123c; }
@@ -377,7 +376,6 @@ function render() {
   const jailBox = document.getElementById('jail-ui-box');
   const jailCardBtn = document.getElementById('jail-card-btn');
 
-  // GESTION ET AFFICHAGE BOX PRISON
   if (gameState.gameStarted && activePlayer) {
     const isMyTurn = (activePlayer.id === socket.id);
     
@@ -415,13 +413,16 @@ function render() {
   });
 
   const mySelf = gameState.players.find(p => p.id === socket.id);
-  if (mySelf && gameState.gameStarted) {
+  if (mySelf && gameState.gameStarted && activePlayer) {
     const currentTileData = monopolyData[mySelf.position];
+    const isMyTurn = (activePlayer.id === socket.id);
+
     if (currentTileData.price > 0 && !gameState.owners[mySelf.position]) {
       buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
-      buyBtn.disabled = (activePlayer.id !== socket.id);
+      buyBtn.disabled = !isMyTurn || (mySelf.money < currentTileData.price);
     } else {
-      buyBtn.innerText = "Non achetable"; buyBtn.disabled = true;
+      buyBtn.innerText = "Non achetable";
+      buyBtn.disabled = true;
     }
   }
 }
