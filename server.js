@@ -45,7 +45,7 @@ const boardProperties = [
   { name: "Faubourg Saint-Honoré", price: 260, rents: [22, 44, 110, 330, 800, 975, 1150], housePrice: 150, group: "yellow" },
   { name: "Place de la Bourse", price: 260, rents: [22, 44, 110, 330, 800, 975, 1150], housePrice: 150, group: "yellow" },
   { name: "Compagnie des Eaux", price: 150, rents: [20, 50], type: "service", group: "service" },
-  { name: "Rue La Fayette", price: 280, rents: [24, 48, 120, 360, 850, 1025, 1200], housePrice: 150, group: "yellow" },
+  { name: "Rue La Lafayette", price: 280, rents: [24, 48, 120, 360, 850, 1025, 1200], housePrice: 150, group: "yellow" },
   { name: "ALLEZ EN PRISON", price: 0, type: "go-to-jail" },
   { name: "Avenue de Breteuil", price: 300, rents: [26, 52, 130, 390, 900, 1100, 1275], housePrice: 200, group: "green" },
   { name: "Avenue Foch", price: 300, rents: [26, 52, 130, 390, 900, 1100, 1275], housePrice: 200, group: "green" },
@@ -75,7 +75,6 @@ function hasMonopoly(room, playerID, group) {
   });
 }
 
-// Calculer dynamiquement le nombre de gares possédées par un joueur
 function countStationsOwned(room, playerID) {
   return boardProperties.filter((tile, idx) => tile.type === 'station' && room.owners[idx] === playerID && !room.mortgaged[idx]).length;
 }
@@ -84,7 +83,7 @@ function sendToJail(room, player, roomId) {
   player.position = 10;
   player.inJail = true;
   player.jailTurns = 0;
-  room.doubleCount = 0; // Reset les doubles d'affilée
+  room.doubleCount = 0;
   io.to(roomId).emit('log', `🚨 ${player.username} est envoyé en PRISON !`);
 }
 
@@ -103,7 +102,7 @@ io.on('connection', socket => {
         owners: {},
         buildings: {},
         mortgaged: {},
-        doubleCount: 0, // Compteur global de doubles d'affilée pour le joueur actif
+        doubleCount: 0,
         gameStarted: false,
         creatorId: socket.id
       };
@@ -120,7 +119,7 @@ io.on('connection', socket => {
       color: colors[room.players.length],
       inJail: false,
       jailTurns: 0,
-      jailCards: 0 // Nombre de cartes de sortie de prison possédées
+      jailCards: 0
     });
 
     io.to(roomId).emit('gameState', room);
@@ -135,7 +134,6 @@ io.on('connection', socket => {
     io.to(roomId).emit('log', "🎮 La partie commence !");
   });
 
-  // PAYER AMENDE POUR SORTIR DE PRISON
   socket.on('payJailFine', roomId => {
     const room = rooms[roomId];
     if (!room) return;
@@ -146,12 +144,11 @@ io.on('connection', socket => {
       player.money -= 50;
       player.inJail = false;
       player.jailTurns = 0;
-      io.to(roomId).emit('log', `💰 ${player.username} paye une amende de 50$ à la banque et sort de prison !`);
+      io.to(roomId).emit('log', `💰 ${player.username} paye une amende de 50$ et sort de prison !`);
       io.to(roomId).emit('gameState', room);
     }
   });
 
-  // UTILISER UNE CARTE DE SORTIE DE PRISON
   socket.on('useJailCard', roomId => {
     const room = rooms[roomId];
     if (!room) return;
@@ -165,7 +162,6 @@ io.on('connection', socket => {
     io.to(roomId).emit('gameState', room);
   });
 
-  // LANCER LES DÉS (GÈRE PRISON ET TRIPLE DOUBLE)
   socket.on('rollDice', roomId => {
     const room = rooms[roomId];
     if (!room || !room.gameStarted) return;
@@ -180,7 +176,6 @@ io.on('connection', socket => {
 
     io.to(roomId).emit('diceRolled', { d1, d2 });
 
-    // CAS DE LA PRISON
     if (activePlayer.inJail) {
       activePlayer.jailTurns++;
       if (isDouble) {
@@ -188,14 +183,13 @@ io.on('connection', socket => {
         activePlayer.jailTurns = 0;
         io.to(roomId).emit('log', `🎲 DOUBLE ! ${activePlayer.username} fait un double ${d1} et s'évade de prison !`);
       } else {
-        if (activePlayer.jailTurns >= 3) {
-          // Au bout de 3 tours sans double, amende forcée
+        if (activePlayer.jailTurns >= 2) {
           activePlayer.money -= 50;
           activePlayer.inJail = false;
           activePlayer.jailTurns = 0;
-          io.to(roomId).emit('log', `⏳ Prison terminée : Pas de double après 3 tours. ${activePlayer.username} paye obligatoirement 50$ d'amende.`);
+          io.to(roomId).emit('log', `⏳ Prison terminée : Pas de double après 2 tours d'attente. ${activePlayer.username} paye 50$ d'amende.`);
         } else {
-          io.to(roomId).emit('log', `🔒 ${activePlayer.username} lance les dés... pas de double (${d1}-${d2}). Reste en prison. (Tour ${activePlayer.jailTurns}/3)`);
+          io.to(roomId).emit('log', `🔒 ${activePlayer.username} fait (${d1}-${d2}). Reste en prison. (Passé ${activePlayer.jailTurns}/2 tours)`);
           room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
           io.to(roomId).emit('gameState', room);
           return;
@@ -203,7 +197,6 @@ io.on('connection', socket => {
       }
     }
 
-    // REGLE DU TRIPLE DOUBLE
     if (isDouble && !activePlayer.inJail) {
       room.doubleCount++;
       io.to(roomId).emit('log', `🔥 Double n°${room.doubleCount} pour ${activePlayer.username} !`);
@@ -215,10 +208,9 @@ io.on('connection', socket => {
         return;
       }
     } else {
-      room.doubleCount = 0; // Brise la chaîne de doubles
+      room.doubleCount = 0;
     }
 
-    // DEPLACEMENT PHYSIQUE
     activePlayer.position += totalDice;
     if (activePlayer.position >= 40) {
       activePlayer.position -= 40;
@@ -229,12 +221,11 @@ io.on('connection', socket => {
     let currentTile = boardProperties[activePlayer.position];
     io.to(roomId).emit('log', `${activePlayer.username} s'arrête sur : ${currentTile.name}`);
 
-    // GESTION DES CASES SPECIFIQUES
     if (currentTile.type === 'go-to-jail') {
       sendToJail(room, activePlayer, roomId);
     } else if (currentTile.type === 'tax') {
       activePlayer.money -= currentTile.rent || 100;
-      io.to(roomId).emit('log', `${activePlayer.username} s'acquitte des taxes.`);
+      io.to(roomId).emit('log', `${activePlayer.username} s'acquitte des taxes de ${currentTile.rent || 100}$.`);
     } else if (currentTile.type === 'chance') {
       const randomCard = chanceCards[Math.floor(Math.random() * chanceCards.length)];
       io.to(roomId).emit('log', `❓ CHANCE : ${randomCard.text}`);
@@ -244,7 +235,6 @@ io.on('connection', socket => {
       if (randomCard.action === 'jail') sendToJail(room, activePlayer, roomId);
       if (randomCard.action === 'jail-card') activePlayer.jailCards++;
     } 
-    // GESTION ET CALCUL DU LOYER DYNAMIQUE (GARES ADAPTÉES)
     else if (room.owners[activePlayer.position] && room.owners[activePlayer.position] !== activePlayer.id) {
       const tileIndex = activePlayer.position;
       
@@ -262,10 +252,9 @@ io.on('connection', socket => {
             rentToPay = currentTile.rents[0];
           }
         } 
-        // BARÈME DU NOMBRE DE GARES LOGUÉ ICI
         else if (currentTile.type === 'station') {
           const stationsCount = countStationsOwned(room, owner.id);
-          const stationRents = [0, 25, 50, 100, 200]; // Échelle indexée 1=25$, 2=50$, 3=100$, 4=200$
+          const stationRents = [0, 25, 50, 100, 200];
           rentToPay = stationRents[stationsCount] || 25;
           io.to(roomId).emit('log', `🚂 ${owner.username} possède ${stationsCount} gares.`);
         } else if (currentTile.type === 'service') {
@@ -278,11 +267,10 @@ io.on('connection', socket => {
       }
     }
 
-    // Si le joueur a fait un double (et n'a pas fini en prison), il rejoue ! Sinon tour suivant.
     if (!isDouble || activePlayer.inJail) {
       room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
     } else {
-      io.to(roomId).emit('log', `🎲 Grâce à son double, ${activePlayer.username} obtient un second lancer !`);
+      io.to(roomId).emit('log', `🎲 Grâce à son double, ${activePlayer.username} rejoue !`);
     }
 
     room.currentPlayer = room.currentPlayer % room.players.length;
@@ -293,10 +281,7 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room || !room.gameStarted) return;
 
-    let lastPlayerIndex = room.currentPlayer; 
-    // Ajustement de l'index si le joueur vient d'obtenir un double et garde son tour
-    const player = room.players[lastPlayerIndex];
-
+    const player = room.players[room.currentPlayer];
     if (player.id !== socket.id) return;
 
     const tileIndex = player.position;
@@ -309,7 +294,7 @@ io.on('connection', socket => {
       room.owners[tileIndex] = player.id;
       room.buildings[tileIndex] = 0;
       room.mortgaged[tileIndex] = false;
-      io.to(roomId).emit('log', `🎉 ${player.username} a acquis ${tile.name} !`);
+      io.to(roomId).emit('log', `🎉 ${player.username} a acheté ${tile.name} pour ${tile.price}$ !`);
       io.to(roomId).emit('gameState', room);
     }
   });
