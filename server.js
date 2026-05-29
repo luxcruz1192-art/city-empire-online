@@ -58,14 +58,6 @@ const boardProperties = [
   { name: "Rue de la Paix", price: 400, rents: [50, 100, 200, 600, 1400, 1700, 2000], housePrice: 200, group: "dark-blue" }
 ];
 
-const chanceCards = [
-  { text: "Erreur de la banque en votre faveur ! Recevez 150$ 💰", action: "money", value: 150 },
-  { text: "Amende pour excès de vitesse. Payez 50$ 💸", action: "money", value: -50 },
-  { text: "Avancez jusqu'à la case DÉPART (Recevez 200$) 🏃‍♂️", action: "move", value: 0 },
-  { text: "Vous êtes libéré de prison ! Cette carte peut être conservée. 📜", action: "jail-card" },
-  { text: "Changement de file ! Allez directement en PRISON sans passer par le départ 🚔", action: "jail" }
-];
-
 function hasMonopoly(room, playerID, group) {
   if (!group || group === 'station' || group === 'service') return false;
   const targetTiles = boardProperties.filter(p => p.group === group);
@@ -107,7 +99,7 @@ io.on('connection', socket => {
         creatorId: socket.id,
         hasRolled: false,
         lastRollWasDouble: false,
-        activeTrade: null // Stockera l'échange en cours
+        activeTrade: null
       };
     }
 
@@ -248,7 +240,6 @@ io.on('connection', socket => {
     } 
     else if (room.owners[activePlayer.position] && room.owners[activePlayer.position] !== activePlayer.id) {
       const tileIndex = activePlayer.position;
-      
       const owner = room.players.find(p => p.id === room.owners[tileIndex]);
       let rentToPay = 0;
 
@@ -338,7 +329,6 @@ io.on('connection', socket => {
     }
   });
 
-  // MODIFIÉ : HYPOTHÈQUE = VENTE ET REMISE SUR LE MARCHÉ
   socket.on('toggleMortgage', (data) => {
     const { roomId, tileIndex } = data;
     const room = rooms[roomId];
@@ -348,19 +338,13 @@ io.on('connection', socket => {
     const tile = boardProperties[tileIndex];
 
     if (room.owners[tileIndex] !== socket.id) return;
-    
-    // Règle : On doit vendre les maisons avant de vendre le terrain
-    if ((room.buildings[tileIndex] || 0) > 0) {
-      io.to(socket.id).emit('log', "⚠️ Vendez d'abord les maisons de cette case !");
-      return;
-    }
+    if ((room.buildings[tileIndex] || 0) > 0) return;
 
     const sellPrice = Math.floor(tile.price / 2);
     player.money += sellPrice;
 
-    io.to(roomId).emit('log', `🏦 ${player.username} a revendu ${tile.name} à la banque pour ${sellPrice}$ ! Elle est de nouveau achetable.`);
+    io.to(roomId).emit('log', `🏦 ${player.username} a revendu ${tile.name} à la banque pour ${sellPrice}$ !`);
     
-    // Suppression complète du propriétaire (Remise sur le marché)
     delete room.owners[tileIndex];
     delete room.buildings[tileIndex];
 
@@ -373,12 +357,15 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room) return;
 
+    const activePlayer = room.players[room.currentPlayer];
+    // RÈGLE : On ne peut proposer un échange que si c'est notre tour !
+    if (!activePlayer || activePlayer.id !== socket.id) return;
+
     const sender = room.players.find(p => p.id === socket.id);
     const receiver = room.players.find(p => p.id === targetPlayerId);
 
     if (!sender || !receiver || sender.id === receiver.id) return;
 
-    // Sauvegarde de l'échange dans la pièce
     room.activeTrade = {
       senderId: sender.id,
       senderName: sender.username,
@@ -386,11 +373,11 @@ io.on('connection', socket => {
       receiverName: receiver.username,
       offerMoney: parseInt(offerMoney) || 0,
       demandMoney: parseInt(demandMoney) || 0,
-      offerProps: offerProps || [], // Tableaux d'index de cases
+      offerProps: offerProps || [],
       demandProps: demandProps || []
     };
 
-    // Alerter toute la salle (pour l'affichage UI de la pop-up)
+    // Tout le monde reçoit l'information de l'échange en cours
     io.to(roomId).emit('tradeProposed', room.activeTrade);
     io.to(roomId).emit('log', `🤝 ${sender.username} propose un échange à ${receiver.username}.`);
   });
@@ -400,14 +387,13 @@ io.on('connection', socket => {
     if (!room || !room.activeTrade) return;
 
     const trade = room.activeTrade;
-    if (socket.id !== trade.receiverId) return; // Seul le destinataire peut accepter
+    if (socket.id !== trade.receiverId) return; // Seul le destinataire ciblé peut accepter
 
     const sender = room.players.find(p => p.id === trade.senderId);
     const receiver = room.players.find(p => p.id === trade.receiverId);
 
     if (!sender || !receiver) return;
 
-    // Vérification des fonds bancaires au moment de l'acceptation
     if (sender.money < trade.offerMoney || receiver.money < trade.demandMoney) {
       io.to(roomId).emit('log', "❌ Échange échoué : Fonds insuffisants.");
       room.activeTrade = null;
@@ -415,19 +401,16 @@ io.on('connection', socket => {
       return;
     }
 
-    // Échange de l'argent
     sender.money = sender.money - trade.offerMoney + trade.demandMoney;
     receiver.money = receiver.money - trade.demandMoney + trade.offerMoney;
 
-    // Échange des propriétés envoyées par le Sender
     trade.offerProps.forEach(tileIndex => {
       if (room.owners[tileIndex] === sender.id) {
         room.owners[tileIndex] = receiver.id;
-        room.buildings[tileIndex] = 0; // Les maisons sont perdues lors d'un échange
+        room.buildings[tileIndex] = 0;
       }
     });
 
-    // Échange des propriétés demandées au Receiver
     trade.demandProps.forEach(tileIndex => {
       if (room.owners[tileIndex] === receiver.id) {
         room.owners[tileIndex] = sender.id;
@@ -445,7 +428,7 @@ io.on('connection', socket => {
     if (!room || !room.activeTrade) return;
     if (socket.id !== room.activeTrade.receiverId && socket.id !== room.activeTrade.senderId) return;
 
-    io.to(roomId).emit('log', `❌ L'échange a été annulé ou refusé.`);
+    io.to(roomId).emit('log', `❌ L'échange a été refusé.`);
     room.activeTrade = null;
     io.to(roomId).emit('gameState', room);
   });
@@ -459,9 +442,7 @@ io.on('connection', socket => {
         const username = room.players[playerIndex].username;
         room.players.splice(playerIndex, 1);
         for (let key in room.owners) {
-          if (room.owners[key] === socket.id) {
-            delete room.owners[key]; delete room.buildings[key];
-          }
+          if (room.owners[key] === socket.id) { delete room.owners[key]; delete room.buildings[key]; }
         }
         if (room.activeTrade && (room.activeTrade.senderId === socket.id || room.activeTrade.receiverId === socket.id)) {
           room.activeTrade = null;
