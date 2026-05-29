@@ -12,6 +12,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/monopoly.html');
 });
 
+
 const rooms = {};
 const colors = ['#ef4444', '#3b82f6', '#10b981', '#eab308', '#a855f7', '#f97316', '#ec4899', '#06b6d4', '#84cc16', '#64748b'];
 
