@@ -37,13 +37,11 @@
     .deed-btn.danger { background: #ef4444; }
     .deed-btn.close { background: #64748b; }
 
-    /* STRUCTURE DU COMPOSITEUR D'ECHANGE */
     .trade-manager-view { background: #1e293b; color: white; width: 95%; height: 95%; padding: 10px; display: none; flex-direction: column; text-align: left; border-radius: 10px; font-size: 12px; overflow-y: auto; }
     .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; width: 100%; }
     .trade-box { background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155; display: flex; flex-direction: column; }
     .trade-box h4 { color: #facc15; margin-bottom: 5px; font-size: 12px; }
     
-    /* BEAUX INPUTS COCHABLES POUR LES CARTES */
     .props-list-select { height: 110px; overflow-y: auto; background: #111827; border: 1px solid #475569; padding: 4px; border-radius: 6px; margin-top: 8px; }
     .trade-item-row { display: flex; align-items: center; background: #1f2937; border-radius: 4px; margin-bottom: 4px; padding: 4px; border-left: 5px solid #64748b; cursor: pointer; transition: 0.1s; }
     .trade-item-row:hover { background: #374151; }
@@ -183,8 +181,7 @@
           </div>
         </div>
 
-        <div class="deed-btn-row" style="margin-top:15px;" id="trade-incoming-btns">
-          </div>
+        <div class="deed-btn-row" style="margin-top:15px;" id="trade-incoming-btns"></div>
       </div>
 
     </div>
@@ -311,7 +308,10 @@ socket.on('gameState', state => { gameState = state; render(); });
 socket.on('log', message => addLog(message));
 socket.on('diceRolled', data => animateDice(data.d1, data.d2));
 
-// AFFICHAGE DE LA PROPOSITION EN COURS (POUR TOUTE LA TABLE)
+socket.on('tradeClosed', () => {
+  closeCenterViews();
+});
+
 socket.on('tradeProposed', trade => {
   if (!gameState) return;
   document.getElementById('default-center-view').style.display = 'none';
@@ -331,21 +331,46 @@ socket.on('tradeProposed', trade => {
 
   const btnsBlock = document.getElementById('trade-incoming-btns');
   
-  // Restriction : Seul l'adversaire concerné peut interagir avec les boutons d'acceptation
   if (socket.id === trade.receiverId) {
     btnsBlock.innerHTML = `
-      <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId); closeCenterViews();" style="background:#10b981; font-size:13px; flex-grow:1; padding:8px;">Accepter l'Échange</button>
-      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); font-size:13px; padding:8px;">Refuser</button>
+      <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId);" style="background:#10b981; font-size:12px; flex-grow:1; padding:8px;">Accepter</button>
+      <button class="deed-btn" onclick="setupCounterProposal(${JSON.stringify(trade).replace(/"/g, '&quot;')})" style="background:#f97316; font-size:12px; flex-grow:1; padding:8px;">Contre-proposer 🔁</button>
+      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId);" style="font-size:12px; padding:8px;">Refuser</button>
     `;
   } else if (socket.id === trade.senderId) {
     btnsBlock.innerHTML = `
-      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); closeCenterViews();" style="width:100%; padding:8px;">Annuler ma proposition</button>
+      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId);" style="width:100%; padding:8px;">Annuler ma proposition</button>
     `;
   } else {
-    // Les spectateurs voient uniquement le déroulement du deal sans pouvoir toucher aux contrôles
     btnsBlock.innerHTML = `<p style="font-style:italic; font-size:11px; text-align:center; width:100%; color:#94a3b8;">Négociation en cours... Seul ${trade.receiverName} peut répondre.</p>`;
   }
 });
+
+function setupCounterProposal(oldTrade) {
+  socket.emit('counterTrade', roomId);
+
+  document.getElementById('trade-incoming-view').style.display = 'none';
+  document.getElementById('trade-manager-view').style.display = 'flex';
+
+  const selectPlayers = document.getElementById('trade-target-player');
+  selectPlayers.innerHTML = `<option value="${oldTrade.senderId}">${oldTrade.senderName}</option>`;
+  selectPlayers.value = oldTrade.senderId;
+
+  document.getElementById('trade-offer-money').value = oldTrade.demandMoney;
+  document.getElementById('trade-demand-money').value = oldTrade.offerMoney;
+
+  updateTradePropsLists();
+
+  oldTrade.demandProps.forEach(idx => {
+    const cb = document.querySelector(`.my-trade-checkbox[value="${idx}"]`);
+    if(cb) cb.checked = true;
+  });
+
+  oldTrade.offerProps.forEach(idx => {
+    const cb = document.querySelector(`.their-trade-checkbox[value="${idx}"]`);
+    if(cb) cb.checked = true;
+  });
+}
 
 function animateDice(v1, v2) {
   const area = document.getElementById('dice-area');
@@ -415,11 +440,9 @@ function openDeedView(index) {
   }
 }
 
-// MANAGEMENT / LISIBILITÉ DU COMPOSITEUR D'ÉCHANGES
 function openTradeManager() {
-  if(!gameState || !gameState.gameStarted) return alert("La partie n'a pas commencé !");
+  if(!gameState || !gameState.gameStarted) return alert("La Partie n'a pas commencé !");
   
-  // Securité Client supplémentaire : Vérifier que c'est bien son tour
   const activePlayer = gameState.players[gameState.currentPlayer];
   if(activePlayer.id !== socket.id) {
     return alert("Vous ne pouvez proposer un échange que pendant votre tour !");
@@ -429,6 +452,9 @@ function openTradeManager() {
   document.getElementById('deed-card-view').style.display = 'none';
   document.getElementById('trade-incoming-view').style.display = 'none';
   document.getElementById('trade-manager-view').style.display = 'flex';
+
+  document.getElementById('trade-offer-money').value = '';
+  document.getElementById('trade-demand-money').value = '';
 
   const selectPlayers = document.getElementById('trade-target-player');
   selectPlayers.innerHTML = '';
@@ -458,14 +484,12 @@ function updateTradePropsLists() {
   myListDiv.innerHTML = '';
   theirListDiv.innerHTML = '';
 
-  // Parcourir toutes les cases vendues pour générer des lignes claires et colorées
   for(let tileIndex in gameState.owners) {
     const idx = parseInt(tileIndex);
     const ownerId = gameState.owners[tileIndex];
     const itemData = monopolyData[idx];
     const sideColor = itemData.color || '#475569';
 
-    // Création d'un élément visuel propre structuré
     const lineHtml = `
       <div class="trade-item-row" style="border-left-color: ${sideColor};">
         <input type="checkbox" value="${idx}" class="${ownerId === socket.id ? 'my-trade-checkbox' : 'their-trade-checkbox'}">
@@ -498,6 +522,8 @@ function submitTradeProposal() {
   socket.emit('initiateTrade', {
     roomId, targetPlayerId, offerMoney, demandMoney, offerProps, demandProps
   });
+  
+  closeCenterViews();
 }
 
 function closeCenterViews() {
@@ -524,7 +550,6 @@ function render() {
     tradeOpenBtn.style.display = 'none';
   }
 
-  // Nettoyage visuel de la grille
   monopolyData.forEach((data, index) => {
     const tile = document.getElementById(`tile-${index}`);
     const priceLabel = document.getElementById(`price-label-${index}`);
@@ -536,7 +561,6 @@ function render() {
     }
   });
 
-  // Propriétaires
   for (let tileIndex in gameState.owners) {
     const ownerObj = gameState.players.find(p => p.id === gameState.owners[tileIndex]);
     const tile = document.getElementById(`tile-${tileIndex}`);
@@ -570,7 +594,6 @@ function render() {
   if (gameState.gameStarted && activePlayer) {
     const isMyTurn = (activePlayer.id === socket.id);
     
-    // RÈGLE : Le bouton Échange s'active uniquement si c'est votre tour de jouer
     tradeOpenBtn.disabled = !isMyTurn;
     if(!isMyTurn) {
       tradeOpenBtn.style.opacity = "0.4";
