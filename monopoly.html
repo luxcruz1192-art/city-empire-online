@@ -143,7 +143,7 @@
       <div id="players"></div>
     </div>
     <div class="panel">
-      <button id="roll-btn" onclick="rollDice()" style="margin-top:0;">🎲 Lancer les dés</button>
+      <button id="roll-btn" onclick="actionDice()" style="margin-top:0;">🎲 Lancer les dés</button>
       <button id="buy-btn" style="background:#10b981; color:white;" onclick="buyProperty()">💰 Acheter la case</button>
     </div>
     <div class="panel">
@@ -337,12 +337,10 @@ function render() {
   document.querySelectorAll('.player-token').forEach(p => p.remove());
   document.querySelectorAll('.building-badge').forEach(b => b.remove());
 
-  // GESTION CACHE DU BOUTON START
   const startBtn = document.getElementById('start-btn-center');
   if (gameState.gameStarted) {
-    startBtn.style.display = 'none'; // Fait disparaître le bouton start définitivement
+    startBtn.style.display = 'none';
   } else {
-    // Seul le créateur voit le bouton au début
     startBtn.style.display = (gameState.creatorId === socket.id) ? 'block' : 'none';
   }
 
@@ -397,7 +395,24 @@ function render() {
       jailBox.style.display = 'none';
     }
     
-    rollBtn.disabled = !isMyTurn;
+    // CONFIGURATION DYNAMIQUE DU BOUTON (LANCER vs FIN DE TOUR)
+    if (isMyTurn) {
+      rollBtn.disabled = false;
+      if (gameState.hasRolled) {
+        rollBtn.innerText = "🛑 Fin de mon tour";
+        rollBtn.style.backgroundColor = "#ef4444";
+        rollBtn.style.color = "white";
+      } else {
+        rollBtn.innerText = "🎲 Lancer les dés";
+        rollBtn.style.backgroundColor = "#facc15";
+        rollBtn.style.color = "#0f172a";
+      }
+    } else {
+      rollBtn.disabled = true;
+      rollBtn.innerText = "🎲 En attente...";
+      rollBtn.style.backgroundColor = "#334155";
+      rollBtn.style.color = "#94a3b8";
+    }
   }
 
   const playersDiv = document.getElementById('players');
@@ -421,16 +436,16 @@ function render() {
     document.getElementById(`pions-case-${player.position}`).appendChild(token);
   });
 
-  // CORRECTION VERIFICATION ACHAT SUR CASE REELLE DU JOUEUR LOCAL
   const mySelf = gameState.players.find(p => p.id === socket.id);
   if (mySelf && gameState.gameStarted && activePlayer) {
     const currentTileData = monopolyData[mySelf.position];
     const isMyTurn = (activePlayer.id === socket.id);
     const hasOwner = gameState.owners[mySelf.position];
 
+    // Tu ne peux acheter QUE si c'est ton tour ET que tu as déjà lancé les dés
     if (currentTileData.price > 0 && !hasOwner) {
       buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
-      buyBtn.disabled = !isMyTurn || (mySelf.money < currentTileData.price);
+      buyBtn.disabled = !isMyTurn || !gameState.hasRolled || (mySelf.money < currentTileData.price);
     } else if (hasOwner) {
       buyBtn.innerText = "Déjà acheté";
       buyBtn.disabled = true;
@@ -441,7 +456,18 @@ function render() {
   }
 }
 
-function rollDice() { socket.emit('rollDice', roomId); }
+// FONCTION MODIFIÉE : Gère soit le lancer, soit le passage de tour
+function actionDice() {
+  if (!gameState) return;
+  if (gameState.hasRolled) {
+    // Si on a déjà lancé, le clic passe au joueur suivant
+    socket.emit('nextTurn', roomId);
+  } else {
+    // Sinon on lance les dés
+    socket.emit('rollDice', roomId);
+  }
+}
+
 function buyProperty() { socket.emit('buyProperty', roomId); }
 function addLog(message){
   const log = document.getElementById('log');
