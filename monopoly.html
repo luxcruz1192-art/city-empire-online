@@ -32,18 +32,23 @@
     .deed-header { width: 100%; text-align: center; padding: 6px; font-weight: bold; font-size: min(1.6vh, 1.6vw); border: 1px solid black; color: white; text-transform: uppercase; border-radius: 4px; }
     .deed-title { font-weight: bold; text-align: center; margin: 5px 0; font-size: min(1.4vh, 1.4vw); text-transform: uppercase; }
     .deed-row { display: flex; justify-content: space-between; margin: 2px 0; }
-    .deed-btn-row { display: flex; gap: 5px; margin-top: auto; }
+    .deed-btn-row { display: flex; gap: 5px; margin-top: auto; width: 100%; }
     .deed-btn { padding: 6px; font-size: 11px; cursor: pointer; border-radius: 5px; font-weight: bold; background: #3b82f6; color: white; }
     .deed-btn.danger { background: #ef4444; }
     .deed-btn.close { background: #64748b; }
 
-    /* STYLE DE L'INTERFACE D'ÉCHANGE */
+    /* STRUCTURE DU COMPOSITEUR D'ECHANGE */
     .trade-manager-view { background: #1e293b; color: white; width: 95%; height: 95%; padding: 10px; display: none; flex-direction: column; text-align: left; border-radius: 10px; font-size: 12px; overflow-y: auto; }
-    .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-    .trade-box { background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155; }
-    .trade-box h4 { color: #facc15; margin-bottom: 5px; }
-    .props-list-select { height: 70px; overflow-y: auto; background: #1e293b; border: 1px solid #475569; padding: 3px; border-radius: 4px; margin-top: 5px; }
-    .props-list-select label { display: block; padding: 2px; font-size: 11px; cursor: pointer; }
+    .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; width: 100%; }
+    .trade-box { background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155; display: flex; flex-direction: column; }
+    .trade-box h4 { color: #facc15; margin-bottom: 5px; font-size: 12px; }
+    
+    /* BEAUX INPUTS COCHABLES POUR LES CARTES */
+    .props-list-select { height: 110px; overflow-y: auto; background: #111827; border: 1px solid #475569; padding: 4px; border-radius: 6px; margin-top: 8px; }
+    .trade-item-row { display: flex; align-items: center; background: #1f2937; border-radius: 4px; margin-bottom: 4px; padding: 4px; border-left: 5px solid #64748b; cursor: pointer; transition: 0.1s; }
+    .trade-item-row:hover { background: #374151; }
+    .trade-item-row input { width: auto; margin: 0 6px 0 2px; cursor: pointer; }
+    .trade-item-row span { font-size: 10px; font-weight: bold; color: white; text-shadow: 1px 1px 1px black; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .dice-area { display: flex; gap: min(2vh, 2vw); margin-top: 10px; }
     .dice { width: min(6vh, 6vw); height: min(6vh, 6vw); background-color: white; color: #0f172a; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: min(3.5vh, 3.5vw); font-weight: bold; }
@@ -130,7 +135,7 @@
           <div class="deed-row"><span>4 Gares :</span> <span>200$</span></div>
         </div>
         
-        <div class="deed-row" style="margin-top:5px;"><strong>Valeur de Revente (1/2 prix) :</strong> <span id="deed-mortgage-val">0$</span></div>
+        <div class="deed-row" style="margin-top:5px;"><strong>Valeur de Revente :</strong> <span id="deed-mortgage-val">0$</span></div>
         
         <div class="deed-btn-row">
           <button class="deed-btn" id="deed-build-btn">Bâtir 🏠</button>
@@ -140,48 +145,46 @@
       </div>
 
       <div class="trade-manager-view" id="trade-manager-view">
-        <h3 style="color:#facc15; text-align:center;">🤝 PROPOSER UN ÉCHANGE</h3>
-        <label style="margin-top:5px; display:block;">Choisir un joueur :</label>
-        <select id="trade-target-player" onchange="updateTradePropsLists()" style="padding:5px; margin-top:3px;"></select>
+        <h3 style="color:#facc15; text-align:center;">🤝 CONFIGURER L'ÉCHANGE</h3>
+        <label style="margin-top:5px; display:block; font-size:11px;">Cibler l'adversaire :</label>
+        <select id="trade-target-player" onchange="updateTradePropsLists()" style="padding:6px; margin-top:2px; font-size:12px;"></select>
 
         <div class="trade-grid">
           <div class="trade-box">
-            <h4>Ce que vous donnez :</h4>
-            <input type="number" id="trade-offer-money" placeholder="Argent $" style="padding:5px; margin:0; font-size:12px;">
+            <h4>Ce que vous offrez :</h4>
+            <input type="number" id="trade-offer-money" placeholder="Montant en $" style="padding:6px; margin-top:2px; font-size:11px;">
             <div class="props-list-select" id="my-props-trade-list"></div>
           </div>
           <div class="trade-box">
             <h4>Ce que vous demandez :</h4>
-            <input type="number" id="trade-demand-money" placeholder="Argent $" style="padding:5px; margin:0; font-size:12px;">
+            <input type="number" id="trade-demand-money" placeholder="Montant en $" style="padding:6px; margin-top:2px; font-size:11px;">
             <div class="props-list-select" id="their-props-trade-list"></div>
           </div>
         </div>
 
         <div class="deed-btn-row" style="margin-top:10px;">
-          <button class="deed-btn" onclick="submitTradeProposal()" style="background:#10b981;">Envoyer l'offre</button>
-          <button class="deed-btn close" onclick="closeCenterViews()">Annuler ❌</button>
+          <button class="deed-btn" onclick="submitTradeProposal()" style="background:#10b981; flex-grow:1; padding:8px;">Envoyer la proposition</button>
+          <button class="deed-btn close" onclick="closeCenterViews()" style="padding:8px;">Annuler ❌</button>
         </div>
       </div>
 
       <div class="trade-manager-view" id="trade-incoming-view">
-        <h3 style="color:#facc15; text-align:center;">📩 OFFRE D'ÉCHANGE REÇUE</h3>
-        <p id="trade-incoming-text" style="margin:8px 0; text-align:center; font-weight:bold;"></p>
+        <h3 style="color:#facc15; text-align:center;">📩 OFFRE D'ÉCHANGE EN COURS</h3>
+        <p id="trade-incoming-text" style="margin:6px 0; text-align:center; font-weight:bold; font-size:13px;"></p>
         
         <div class="trade-grid">
           <div class="trade-box">
-            <h4>Vous recevez :</h4>
-            <p id="trade-inc-receive-text" style="font-size:11px; color:#10b981;"></p>
+            <h4 style="color:#10b981;">Proposition reçue :</h4>
+            <p id="trade-inc-receive-text" style="font-size:11px; margin-top:4px; line-height:1.4;"></p>
           </div>
           <div class="trade-box">
-            <h4>On vous demande :</h4>
-            <p id="trade-inc-demand-text" style="font-size:11px; color:#ef4444;"></p>
+            <h4 style="color:#ef4444;">Contrepartie demandée :</h4>
+            <p id="trade-inc-demand-text" style="font-size:11px; margin-top:4px; line-height:1.4;"></p>
           </div>
         </div>
 
         <div class="deed-btn-row" style="margin-top:15px;" id="trade-incoming-btns">
-          <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId); closeCenterViews();" style="background:#10b981; font-size:13px;">Accepter l'Échange</button>
-          <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); closeCenterViews();" style="font-size:13px;">Refuser</button>
-        </div>
+          </div>
       </div>
 
     </div>
@@ -214,17 +217,17 @@ const monopolyData = [
   { name: "Caisse de Communauté", price: 0, type: "special" },
   { name: "Rue de Lecourbe", price: 60, type: "prop", color: "#955436", rents: [4, 8, 20, 60, 180, 320, 450], housePrice: 50 },
   { name: "Impôt sur le Revenu", price: 0, type: "tax" },
-  { name: "Gare Montparnasse", price: 200, type: "station" },
+  { name: "Gare Montparnasse", price: 200, type: "station", color: "#475569" },
   { name: "Rue de Vaugirard", price: 100, type: "prop", color: "#39a4dc", rents: [6, 12, 30, 90, 270, 400, 550], housePrice: 50 },
   { name: "Chance", price: 0, type: "chance" },
   { name: "Rue de Courcelles", price: 100, type: "prop", color: "#39a4dc", rents: [6, 12, 30, 90, 270, 400, 550], housePrice: 50 },
   { name: "Avenue de la République", price: 120, type: "prop", color: "#39a4dc", rents: [8, 16, 40, 100, 300, 450, 600], housePrice: 50 },
   { name: "PRISON", price: 0, type: "special" },
   { name: "Boulevard de la Villette", price: 140, type: "prop", color: "#d93a96", rents: [10, 20, 50, 150, 450, 625, 750], housePrice: 100 },
-  { name: "Compagnie d'Électricité", price: 150, type: "service", rents: [20, 50] },
+  { name: "Compagnie d'Électricité", price: 150, type: "service", color: "#78350f", rents: [20, 50] },
   { name: "Avenue de Neuilly", price: 140, type: "prop", color: "#d93a96", rents: [10, 20, 50, 150, 450, 625, 750], housePrice: 100 },
   { name: "Rue de Paradis", price: 160, type: "prop", color: "#d93a96", rents: [12, 24, 60, 180, 500, 700, 900], housePrice: 100 },
-  { name: "Gare de Lyon", price: 200, type: "station" },
+  { name: "Gare de Lyon", price: 200, type: "station", color: "#475569" },
   { name: "Avenue Mozart", price: 180, type: "prop", color: "#f29400", rents: [14, 28, 70, 200, 550, 750, 950], housePrice: 100 },
   { name: "Caisse de Communauté", price: 0, type: "special" },
   { name: "Saint-Michel", price: 180, type: "prop", color: "#f29400", rents: [14, 28, 70, 200, 550, 750, 950], housePrice: 100 },
@@ -234,17 +237,17 @@ const monopolyData = [
   { name: "Chance", price: 0, type: "chance" },
   { name: "Avenue de l'Opéra", price: 220, type: "prop", color: "#e2001a", rents: [18, 36, 90, 250, 700, 875, 1050], housePrice: 150 },
   { name: "Rue de la Paix", price: 240, type: "prop", color: "#e2001a", rents: [20, 40, 100, 300, 750, 925, 1100], housePrice: 150 },
-  { name: "Gare du Nord", price: 200, type: "station" },
+  { name: "Gare du Nord", price: 200, type: "station", color: "#475569" },
   { name: "Faubourg Saint-Honoré", price: 260, type: "prop", color: "#fdf100", rents: [22, 44, 110, 330, 800, 975, 1150], housePrice: 150 },
   { name: "Place de la Bourse", price: 260, type: "prop", color: "#fdf100", rents: [22, 44, 110, 330, 800, 975, 1150], housePrice: 150 },
-  { name: "Compagnie des Eaux", price: 150, type: "service", rents: [20, 50] },
+  { name: "Compagnie des Eaux", price: 150, type: "service", color: "#78350f", rents: [20, 50] },
   { name: "Rue La Lafayette", price: 280, type: "prop", color: "#fdf100", rents: [24, 48, 120, 360, 850, 1025, 1200], housePrice: 150 },
   { name: "ALLEZ EN PRISON", price: 0, type: "go-to-jail" },
   { name: "Avenue de Breteuil", price: 300, type: "prop", color: "#1fa147", rents: [26, 52, 130, 390, 900, 1100, 1275], housePrice: 200 },
   { name: "Avenue Foch", price: 300, type: "prop", color: "#1fa147", rents: [26, 52, 130, 390, 900, 1100, 1275], housePrice: 200 },
   { name: "Caisse de Communauté", price: 0, type: "special" },
   { name: "Capucines", price: 320, type: "prop", color: "#1fa147", rents: [28, 56, 150, 450, 1000, 1200, 1400], housePrice: 200 },
-  { name: "Gare Saint-Lazare", price: 200, type: "station" },
+  { name: "Gare Saint-Lazare", price: 200, type: "station", color: "#475569" },
   { name: "Chance", price: 0, type: "chance" },
   { name: "Champs-Élysées", price: 350, type: "prop", color: "#0066b2", rents: [35, 70, 175, 500, 1100, 1300, 1500], housePrice: 200 },
   { name: "Taxe de Luxe", price: 0, type: "tax" },
@@ -264,7 +267,6 @@ monopolyData.forEach((data, index) => {
   const pos = tilePositions[index];
   tile.style.gridRow = pos[0] + 1;
   tile.style.gridColumn = pos[1] + 1;
-
   tile.onclick = () => openDeedView(index);
 
   if ((data.type === 'prop') && data.color) {
@@ -309,7 +311,7 @@ socket.on('gameState', state => { gameState = state; render(); });
 socket.on('log', message => addLog(message));
 socket.on('diceRolled', data => animateDice(data.d1, data.d2));
 
-// RÉCEPTION DU SIGNAL D'ÉCHANGE
+// AFFICHAGE DE LA PROPOSITION EN COURS (POUR TOUTE LA TABLE)
 socket.on('tradeProposed', trade => {
   if (!gameState) return;
   document.getElementById('default-center-view').style.display = 'none';
@@ -319,24 +321,29 @@ socket.on('tradeProposed', trade => {
   const incView = document.getElementById('trade-incoming-view');
   incView.style.display = 'flex';
 
-  document.getElementById('trade-incoming-text').innerText = `${trade.senderName} vous propose un marché !`;
+  document.getElementById('trade-incoming-text').innerText = `${trade.senderName} propose un marché à ${trade.receiverName} !`;
 
-  // Traduction visuelle du contenu reçu / demandé
-  let recPropsText = trade.offerProps.map(idx => monopolyData[idx].name).join(', ') || 'Aucune carte';
-  let demPropsText = trade.demandProps.map(idx => monopolyData[idx].name).join(', ') || 'Aucune carte';
+  let recPropsText = trade.offerProps.map(idx => `🔹 ${monopolyData[idx].name}`).join('<br>') || 'Aucune carte';
+  let demPropsText = trade.demandProps.map(idx => `🔹 ${monopolyData[idx].name}`).join('<br>') || 'Aucune carte';
 
-  document.getElementById('trade-inc-receive-text').innerHTML = `💵 ${trade.offerMoney}$<br>🏢 ${recPropsText}`;
-  document.getElementById('trade-inc-demand-text').innerHTML = `💵 ${trade.demandMoney}$<br>🏢 ${demPropsText}`;
+  document.getElementById('trade-inc-receive-text').innerHTML = `💵 <strong>${trade.offerMoney}$</strong><br>${recPropsText}`;
+  document.getElementById('trade-inc-demand-text').innerHTML = `💵 <strong>${trade.demandMoney}$</strong><br>${demPropsText}`;
 
-  // Cacher les boutons de validation si on n'est pas le destinataire ciblé
   const btnsBlock = document.getElementById('trade-incoming-btns');
+  
+  // Restriction : Seul l'adversaire concerné peut interagir avec les boutons d'acceptation
   if (socket.id === trade.receiverId) {
     btnsBlock.innerHTML = `
-      <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId); closeCenterViews();" style="background:#10b981; font-size:13px;">Accepter</button>
-      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); closeCenterViews();" style="font-size:13px;">Refuser</button>
+      <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId); closeCenterViews();" style="background:#10b981; font-size:13px; flex-grow:1; padding:8px;">Accepter l'Échange</button>
+      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); font-size:13px; padding:8px;">Refuser</button>
+    `;
+  } else if (socket.id === trade.senderId) {
+    btnsBlock.innerHTML = `
+      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); closeCenterViews();" style="width:100%; padding:8px;">Annuler ma proposition</button>
     `;
   } else {
-    btnsBlock.innerHTML = `<p style="font-style:italic; font-size:11px; text-align:center; width:100%;">En attente de la réponse de ${trade.receiverName}...</p>`;
+    // Les spectateurs voient uniquement le déroulement du deal sans pouvoir toucher aux contrôles
+    btnsBlock.innerHTML = `<p style="font-style:italic; font-size:11px; text-align:center; width:100%; color:#94a3b8;">Négociation en cours... Seul ${trade.receiverName} peut répondre.</p>`;
   }
 });
 
@@ -361,9 +368,8 @@ function animateDice(v1, v2) {
 
 function openDeedView(index) {
   const item = monopolyData[index];
-  if (item.price === 0) return;
+  if (!item || item.price === 0) return;
 
-  // Ferme les autres vues centrales
   document.getElementById('default-center-view').style.display = 'none';
   document.getElementById('trade-manager-view').style.display = 'none';
   document.getElementById('trade-incoming-view').style.display = 'none';
@@ -401,7 +407,6 @@ function openDeedView(index) {
 
   if (gameState) {
     const isOwner = (gameState.owners[index] === socket.id);
-    
     mortgageBtn.disabled = !isOwner;
     mortgageBtn.onclick = () => { socket.emit('toggleMortgage', { roomId, tileIndex: index }); closeCenterViews(); };
 
@@ -410,10 +415,16 @@ function openDeedView(index) {
   }
 }
 
-// MANAGEMENT DES INTERFACES D'ÉCHANGES
+// MANAGEMENT / LISIBILITÉ DU COMPOSITEUR D'ÉCHANGES
 function openTradeManager() {
   if(!gameState || !gameState.gameStarted) return alert("La partie n'a pas commencé !");
   
+  // Securité Client supplémentaire : Vérifier que c'est bien son tour
+  const activePlayer = gameState.players[gameState.currentPlayer];
+  if(activePlayer.id !== socket.id) {
+    return alert("Vous ne pouvez proposer un échange que pendant votre tour !");
+  }
+
   document.getElementById('default-center-view').style.display = 'none';
   document.getElementById('deed-card-view').style.display = 'none';
   document.getElementById('trade-incoming-view').style.display = 'none';
@@ -422,7 +433,6 @@ function openTradeManager() {
   const selectPlayers = document.getElementById('trade-target-player');
   selectPlayers.innerHTML = '';
 
-  // Remplir le select avec les adversaires dispos
   let count = 0;
   gameState.players.forEach(p => {
     if(p.id !== socket.id) {
@@ -432,7 +442,7 @@ function openTradeManager() {
   });
 
   if(count === 0) {
-    alert("Pas assez de joueurs pour échanger !");
+    alert("Pas d'adversaire disponible pour négocier !");
     closeCenterViews();
     return;
   }
@@ -448,18 +458,30 @@ function updateTradePropsLists() {
   myListDiv.innerHTML = '';
   theirListDiv.innerHTML = '';
 
-  // Parcourir toutes les cases possédées
+  // Parcourir toutes les cases vendues pour générer des lignes claires et colorées
   for(let tileIndex in gameState.owners) {
     const idx = parseInt(tileIndex);
     const ownerId = gameState.owners[tileIndex];
-    const name = monopolyData[idx].name;
+    const itemData = monopolyData[idx];
+    const sideColor = itemData.color || '#475569';
+
+    // Création d'un élément visuel propre structuré
+    const lineHtml = `
+      <div class="trade-item-row" style="border-left-color: ${sideColor};">
+        <input type="checkbox" value="${idx}" class="${ownerId === socket.id ? 'my-trade-checkbox' : 'their-trade-checkbox'}">
+        <span>${itemData.name}</span>
+      </div>
+    `;
 
     if(ownerId === socket.id) {
-      myListDiv.innerHTML += `<label><input type="checkbox" value="${idx}" class="my-trade-checkbox"> ${name}</label>`;
+      myListDiv.innerHTML += lineHtml;
     } else if(ownerId === targetId) {
-      theirListDiv.innerHTML += `<label><input type="checkbox" value="${idx}" class="their-trade-checkbox"> ${name}</label>`;
+      theirListDiv.innerHTML += lineHtml;
     }
   }
+
+  if(myListDiv.innerHTML === '') myListDiv.innerHTML = '<p style="font-size:10px; color:#64748b; padding:5px;">Vous n\'avez aucun titre.</p>';
+  if(theirListDiv.innerHTML === '') theirListDiv.innerHTML = '<p style="font-size:10px; color:#64748b; padding:5px;">Cet adversaire n\'a aucun titre.</p>';
 }
 
 function submitTradeProposal() {
@@ -474,12 +496,7 @@ function submitTradeProposal() {
   document.querySelectorAll('.their-trade-checkbox:checked').forEach(cb => demandProps.push(parseInt(cb.value)));
 
   socket.emit('initiateTrade', {
-    roomId,
-    targetPlayerId,
-    offerMoney,
-    demandMoney,
-    offerProps,
-    demandProps
+    roomId, targetPlayerId, offerMoney, demandMoney, offerProps, demandProps
   });
 }
 
@@ -497,15 +514,17 @@ function render() {
   document.querySelectorAll('.building-badge').forEach(b => b.remove());
 
   const startBtn = document.getElementById('start-btn-center');
+  const tradeOpenBtn = document.getElementById('trade-open-btn');
+
   if (gameState.gameStarted) {
     startBtn.style.display = 'none';
-    document.getElementById('trade-open-btn').style.display = 'block';
+    tradeOpenBtn.style.display = 'block';
   } else {
     startBtn.style.display = (gameState.creatorId === socket.id) ? 'block' : 'none';
-    document.getElementById('trade-open-btn').style.display = 'none';
+    tradeOpenBtn.style.display = 'none';
   }
 
-  // RAZ Affichages des prix
+  // Nettoyage visuel de la grille
   monopolyData.forEach((data, index) => {
     const tile = document.getElementById(`tile-${index}`);
     const priceLabel = document.getElementById(`price-label-${index}`);
@@ -517,7 +536,7 @@ function render() {
     }
   });
 
-  // Coloration dynamique des propriétaires
+  // Propriétaires
   for (let tileIndex in gameState.owners) {
     const ownerObj = gameState.players.find(p => p.id === gameState.owners[tileIndex]);
     const tile = document.getElementById(`tile-${tileIndex}`);
@@ -551,6 +570,16 @@ function render() {
   if (gameState.gameStarted && activePlayer) {
     const isMyTurn = (activePlayer.id === socket.id);
     
+    // RÈGLE : Le bouton Échange s'active uniquement si c'est votre tour de jouer
+    tradeOpenBtn.disabled = !isMyTurn;
+    if(!isMyTurn) {
+      tradeOpenBtn.style.opacity = "0.4";
+      tradeOpenBtn.innerText = "🤝 Échange (Attendre votre tour)";
+    } else {
+      tradeOpenBtn.style.opacity = "1";
+      tradeOpenBtn.innerText = "🤝 Proposer Échange";
+    }
+
     if (activePlayer.inJail) {
       turnIndicator.innerText = `🔒 ${activePlayer.username} est en prison !`;
       jailBox.style.display = isMyTurn ? 'flex' : 'none';
