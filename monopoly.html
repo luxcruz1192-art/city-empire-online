@@ -1,170 +1,59 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>City Empire Online</title>
+<meta charset="UTF-8">
+<title>Monopoly V4 Online</title>
+<script src="/socket.io/socket.io.js"></script>
 
-  <script src="/socket.io/socket.io.js"></script>
+<style>
+body{background:#0f172a;color:white;font-family:Arial;padding:10px}
+h1{text-align:center;color:#facc15}
 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:Arial;
-    }
+.menu{max-width:400px;margin:auto;background:#111827;padding:15px;border-radius:10px}
+input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px}
 
-    body{
-      background:#0f172a;
-      color:white;
-      padding:20px;
-    }
+.game{display:none;gap:20px;justify-content:center}
 
-    h1{
-      text-align:center;
-      margin-bottom:20px;
-      color:#facc15;
-    }
+.board{
+width:700px;height:700px;
+display:grid;
+grid-template-columns:repeat(11,1fr);
+grid-template-rows:repeat(11,1fr);
+background:white;
+}
 
-    .menu{
-      max-width:400px;
-      margin:auto;
-      background:#111827;
-      padding:20px;
-      border-radius:20px;
-    }
+.tile{border:1px solid black;font-size:10px;position:relative}
 
-    input{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border:none;
-      border-radius:10px;
-    }
+.player{width:10px;height:10px;border-radius:50%;position:absolute}
 
-    button{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border:none;
-      border-radius:10px;
-      background:#facc15;
-      font-weight:bold;
-      cursor:pointer;
-    }
+.sidebar{width:250px;background:#111827;padding:10px;border-radius:10px}
 
-    .game{
-      display:none;
-      margin-top:20px;
-      gap:20px;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
-
-    .board{
-      width:800px;
-      height:800px;
-      background:white;
-      display:grid;
-      grid-template-columns:repeat(11,1fr);
-      grid-template-rows:repeat(11,1fr);
-      border:8px solid #111827;
-      position:relative;
-    }
-
-    .center{
-      grid-column:2/11;
-      grid-row:2/11;
-      background:#1e3a8a;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      flex-direction:column;
-      color:white;
-    }
-
-    .tile{
-      border:1px solid black;
-      background:white;
-      color:black;
-      font-size:10px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      text-align:center;
-      position:relative;
-    }
-
-    .player{
-      width:14px;
-      height:14px;
-      border-radius:50%;
-      position:absolute;
-      bottom:2px;
-    }
-
-    .sidebar{
-      width:320px;
-      background:#111827;
-      padding:20px;
-      border-radius:20px;
-    }
-
-    .panel{
-      background:#1f2937;
-      padding:15px;
-      border-radius:12px;
-      margin-bottom:15px;
-    }
-
-    .log{
-      height:250px;
-      overflow-y:auto;
-    }
-
-    .log p{
-      margin-bottom:6px;
-    }
-  </style>
+.log{height:200px;overflow:auto;font-size:12px}
+</style>
 </head>
+
 <body>
 
-<h1>🏙️ CITY EMPIRE ONLINE</h1>
+<h1>🏙️ MONOPOLY V4</h1>
 
 <div class="menu" id="menu">
-  <input type="text" id="username" placeholder="Pseudo">
-  <input type="text" id="room" placeholder="Code de salle">
-
-  <button onclick="joinGame()">REJOINDRE</button>
+<input id="username" placeholder="Pseudo">
+<input id="room" placeholder="Room">
+<button onclick="join()">Jouer</button>
 </div>
 
 <div class="game" id="game">
 
-  <div class="board" id="board">
-    <div class="center">
-      <h2>CITY EMPIRE</h2>
-      <p>Multijoueur</p>
-    </div>
-  </div>
+<div class="board" id="board"></div>
 
-  <div class="sidebar">
+<div class="sidebar">
+<button onclick="roll()">🎲 Lancer</button>
+<button onclick="buy()">💰 Acheter</button>
 
-    <div class="panel">
-      <h3>👥 Joueurs</h3>
-      <div id="players"></div>
-    </div>
+<div id="players"></div>
+<div class="log" id="log"></div>
 
-    <div class="panel">
-      <button onclick="rollDice()">🎲 Lancer les dés</button>
-    </div>
-
-    <div class="panel">
-      <h3>📜 Journal</h3>
-      <div class="log" id="log"></div>
-    </div>
-
-  </div>
+</div>
 
 </div>
 
@@ -172,109 +61,64 @@
 
 const socket = io();
 
-const board = document.getElementById('board');
+let roomId;
+let state;
 
-const properties = [];
+const board = document.getElementById("board");
+const playersDiv = document.getElementById("players");
 
 for(let i=0;i<40;i++){
-  properties.push({
-    name:'Case '+(i+1)
-  });
+  const d=document.createElement("div");
+  d.className="tile";
+  d.innerText=i;
+  board.appendChild(d);
 }
 
-const tilePositions = [];
+function join(){
+  roomId=document.getElementById("room").value;
 
-for(let i=0;i<11;i++) tilePositions.push([10,10-i]);
-for(let i=1;i<11;i++) tilePositions.push([10-i,0]);
-for(let i=1;i<11;i++) tilePositions.push([0,i]);
-for(let i=1;i<10;i++) tilePositions.push([i,10]);
-
-const tiles = [];
-
-properties.forEach((property,index)=>{
-
-  const tile = document.createElement('div');
-
-  tile.className='tile';
-
-  const pos = tilePositions[index];
-
-  tile.style.gridRow = pos[0]+1;
-  tile.style.gridColumn = pos[1]+1;
-
-  tile.innerHTML = property.name;
-
-  board.appendChild(tile);
-
-  tiles.push(tile);
-});
-
-let gameState = null;
-let roomId = null;
-
-function joinGame(){
-
-  const username = document.getElementById('username').value;
-  roomId = document.getElementById('room').value;
-
-  socket.emit('joinRoom',{
-    username,
+  socket.emit("joinRoom",{
+    username:document.getElementById("username").value,
     roomId
   });
 
-  document.getElementById('menu').style.display='none';
-  document.getElementById('game').style.display='flex';
+  document.getElementById("menu").style.display="none";
+  document.getElementById("game").style.display="flex";
 }
 
-socket.on('gameState',state=>{
-  gameState = state;
+socket.on("gameState",s=>{
+  state=s;
   render();
 });
 
-socket.on('log',message=>{
-  addLog(message);
+socket.on("log",l=>{
+  document.getElementById("log").innerHTML=l+"<br>"+document.getElementById("log").innerHTML;
 });
 
 function render(){
 
-  document.querySelectorAll('.player').forEach(p=>p.remove());
+  document.querySelectorAll(".player").forEach(e=>e.remove());
+  playersDiv.innerHTML="";
 
-  const playersDiv = document.getElementById('players');
-  playersDiv.innerHTML='';
+  state.players.forEach((p,i)=>{
 
-  gameState.players.forEach((player,index)=>{
+    playersDiv.innerHTML += `<div>${p.name} 💰${p.money}</div>`;
 
-    const div = document.createElement('div');
+    const t=document.createElement("div");
+    t.className="player";
+    t.style.background=p.color;
+    t.style.left=(i*12)+"px";
 
-    div.innerHTML = `
-      ${player.username} - 💰 ${player.money}$
-    `;
-
-    playersDiv.appendChild(div);
-
-    const token = document.createElement('div');
-
-    token.className='player';
-    token.style.background = player.color;
-    token.style.right = (index*15)+'px';
-
-    tiles[player.position].appendChild(token);
+    board.children[p.pos].appendChild(t);
   });
 }
 
-function rollDice(){
-  socket.emit('rollDice',roomId);
+function roll(){
+  socket.emit("rollDice",roomId);
 }
 
-function addLog(message){
-
-  const log = document.getElementById('log');
-
-  const p = document.createElement('p');
-
-  p.innerText = message;
-
-  log.prepend(p);
+function buy(){
+  socket.emit("buy",roomId);
 }
 
 </script>
