@@ -8,201 +8,79 @@
   <script src="/socket.io/socket.io.js"></script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
 
-    body {
-      background: #0f172a;
-      color: white;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    body { background: #0f172a; color: white; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    h1 { text-align: center; margin-bottom: 15px; color: #facc15; font-size: 2rem; }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 15px;
-      color: #facc15;
-      font-size: 2rem;
-    }
-
-    .menu {
-      max-width: 400px;
-      width: 100%;
-      margin: auto;
-      background: #1e293b;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      border: 1px solid #334155;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border-radius: 10px;
-      border: none;
-      font-size: 1rem;
-    }
-
-    input {
-      background: #0f172a;
-      color: white;
-      border: 2px solid #475569;
-    }
-
+    .menu { max-width: 400px; width: 100%; margin: auto; background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    input, button { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: none; font-size: 1rem; }
+    input { background: #0f172a; color: white; border: 2px solid #475569; }
     input:focus { outline: none; border-color: #facc15; }
 
-    button {
-      background: #facc15;
-      color: #0f172a;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
+    button { background: #facc15; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
     button:hover { background: #e2b80d; }
-    button:active { transform: scale(0.98); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .btn-buy { background: #10b981; color: white; }
     .btn-buy:hover { background: #059669; }
 
-    /* --- RESPONSIVE STRUCTURING --- */
-    .game {
-      display: none;
-      gap: 20px;
-      justify-content: center;
-      align-items: center;
-      max-width: 95vw;
-      width: 100%;
-    }
+    .game { display: none; gap: 20px; justify-content: center; align-items: center; max-width: 95vw; width: 100%; }
 
-    /* FIX : Taille responsive basée sur le plus petit côté de l'écran */
-    .board {
-      width: min(78vh, 78vw);
-      height: min(78vh, 78vw);
-      background: #cbd5e1;
-      display: grid;
-      grid-template-columns: repeat(11, 1fr);
-      grid-template-rows: repeat(11, 1fr);
-      border: 6px solid #1e293b;
-      border-radius: 8px;
-      box-shadow: 0 12px 24px rgba(0,0,0,0.4);
-    }
+    .board { width: min(78vh, 78vw); height: min(78vh, 78vw); background: #cbd5e1; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); border: 6px solid #1e293b; border-radius: 8px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
 
-    .center {
-      grid-column: 2 / 11;
-      grid-row: 2 / 11;
-      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
+    .center { grid-column: 2 / 11; grid-row: 2 / 11; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 10px; text-align: center; position: relative; }
+    .center h2 { font-size: min(3.5vh, 3.5vw); color: #facc15; }
+    #start-btn-center { background: #e11d48; color: white; padding: 10px 20px; font-size: min(1.8vh, 1.8vw); border-radius: 20px; width: auto; margin-top: 15px; }
 
-    .center h2 {
-      font-size: min(3.5vh, 3.5vw);
-      color: #facc15;
-    }
+    #turn-indicator { margin-top: 10px; padding: 6px 16px; background: rgba(0,0,0,0.5); border-radius: 20px; font-size: min(1.5vh, 1.5vw); font-weight: bold; }
 
-    #start-btn-center {
-      background: #e11d48;
-      color: white;
-      padding: 10px 20px;
-      font-size: min(1.8vh, 1.8vw);
-      border-radius: 20px;
-      width: auto;
-      margin-top: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-
-    #turn-indicator {
-      margin-top: 15px;
-      padding: 6px 16px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 20px;
-      font-size: min(1.5vh, 1.5vw);
-      font-weight: bold;
-    }
-
-    .tile {
-      border: 1px solid #94a3b8;
-      background: #f8fafc;
+    /* --- ENSEMBLE DES DÉS ANIMÉS --- */
+    .dice-area { display: flex; gap: min(2vh, 2vw); margin-top: min(2vh, 2vw); margin-bottom: min(1vh, 1vw); }
+    
+    .dice {
+      width: min(6vh, 6vw);
+      height: min(6vh, 6vw);
+      background-color: white;
       color: #0f172a;
-      font-size: min(1vh, 1vw); /* Texte s'adapte à l'écran */
-      font-weight: bold;
+      border-radius: min(1vh, 1vw);
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      text-align: center;
-      padding: 2px;
-      overflow: hidden;
-    }
-
-    .tile-color { width: 100%; height: 18%; border-bottom: 1px solid #94a3b8; }
-
-    .tile-name {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      line-height: 1.1;
+      align-items: center;
+      font-size: min(3.5vh, 3.5vw);
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: transform 0.1s;
     }
 
+    /* Animation de secousse/rotation */
+    @keyframes roll {
+      0% { transform: rotate(0deg) scale(1); }
+      20% { transform: rotate(-20deg) scale(1.1); }
+      40% { transform: rotate(45deg) scale(0.9); }
+      60% { transform: rotate(-45deg) scale(1.2); }
+      80% { transform: rotate(180deg) scale(0.9); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    .rolling { animation: roll 0.6s linear infinite; }
+
+    .tile { border: 1px solid #94a3b8; background: #f8fafc; color: #0f172a; font-size: min(0.95vh, 0.95vw); font-weight: bold; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; padding: 2px; overflow: hidden; transition: background-color 0.3s ease; }
+    .tile-color { width: 100%; height: 18%; border-bottom: 1px solid #94a3b8; }
+    .tile-name { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
     .tile-price { color: #64748b; font-style: italic; }
 
-    .tile-owner-bar { width: 100%; height: 8%; font-size: 7px; color: white; }
+    .tile.owned { color: #ffffff !important; }
+    .tile.owned .tile-price { color: rgba(255,255,255,0.8) !important; font-weight: bold; font-size: 8px; }
 
-    .pions-container {
-      display: flex;
-      gap: 2px;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      min-height: 20%;
-    }
+    .pions-container { display: flex; gap: 2px; justify-content: center; align-items: center; width: 100%; min-height: 20%; }
+    .player-token { width: min(1.5vh, 1.5vw); height: min(1.5vh, 1.5vw); border-radius: 50%; border: 1.5px solid white; }
 
-    .player-token {
-      width: min(1.5vh, 1.5vw);
-      height: min(1.5vh, 1.5vw);
-      border-radius: 50%;
-      border: 1.5px solid white;
-    }
-
-    /* --- SIDEBAR --- */
-    .sidebar {
-      width: 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .panel {
-      background: #1e293b;
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid #334155;
-    }
-
+    .sidebar { width: 320px; display: flex; flex-direction: column; gap: 15px; }
+    .panel { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
     .panel h3 { border-bottom: 2px solid #334155; padding-bottom: 5px; margin-bottom: 10px; color: #facc15; }
 
     .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #334155; }
     .player-row.active-turn { background: rgba(250, 204, 21, 0.1); border-left: 3px solid #facc15; padding-left: 5px; }
-
     .player-info { display: flex; align-items: center; gap: 8px; }
     .player-dot { width: 10px; height: 10px; border-radius: 50%; }
 
@@ -222,14 +100,17 @@
 </div>
 
 <div class="game" id="game">
-
   <div class="board" id="board">
     <div class="center">
       <h2>CITY EMPIRE</h2>
       <p id="room-display" style="opacity: 0.7; font-size: 0.9rem;">Salle : -</p>
       
+      <div class="dice-area" id="dice-area" style="display: none;">
+        <div class="dice" id="dice1">🎲</div>
+        <div class="dice" id="dice2">🎲</div>
+      </div>
+
       <button id="start-btn-center" onclick="startGame()">DÉMARRER LA PARTIE 🚀</button>
-      
       <div id="turn-indicator">En attente du lancement...</div>
     </div>
   </div>
@@ -250,7 +131,6 @@
       <div class="log" id="log"></div>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -265,7 +145,7 @@ const monopolyData = [
   { name: "Impôt sur le Revenu", price: 0, type: "tax" },
   { name: "Gare Montparnasse", price: 200, type: "station" },
   { name: "Rue de Vaugirard", price: 100, type: "prop", color: "#39a4dc" },
-  { name: "Chance", price: 0, type: "special" },
+  { name: "Chance", price: 0, type: "chance" },
   { name: "Rue de Courcelles", price: 100, type: "prop", color: "#39a4dc" },
   { name: "Avenue de la République", price: 120, type: "prop", color: "#39a4dc" },
   { name: "PRISON", price: 0, type: "special" },
@@ -280,7 +160,7 @@ const monopolyData = [
   { name: "Place Pigalle", price: 200, type: "prop", color: "#f29400" },
   { name: "PARC GRATUIT", price: 0, type: "special" },
   { name: "Avenue Matignon", price: 220, type: "prop", color: "#e2001a" },
-  { name: "Chance", price: 0, type: "special" },
+  { name: "Chance", price: 0, type: "chance" },
   { name: "Avenue de l'Opéra", price: 220, type: "prop", color: "#e2001a" },
   { name: "Rue de la Paix", price: 240, type: "prop", color: "#e2001a" },
   { name: "Gare du Nord", price: 200, type: "station" },
@@ -288,13 +168,13 @@ const monopolyData = [
   { name: "Place de la Bourse", price: 260, type: "prop", color: "#fdf100" },
   { name: "Compagnie des Eaux", price: 150, type: "service" },
   { name: "Rue La Fayette", price: 280, type: "prop", color: "#fdf100" },
-  { name: "ALLEZ EN PRISON", price: 0, type: "special" },
+  { name: "ALLEZ EN PRISON", price: 0, type: "go-to-jail" },
   { name: "Avenue de Breteuil", price: 300, type: "prop", color: "#1fa147" },
   { name: "Avenue Foch", price: 300, type: "prop", color: "#1fa147" },
   { name: "Caisse de Communauté", price: 0, type: "special" },
   { name: "Capucines", price: 320, type: "prop", color: "#1fa147" },
   { name: "Gare Saint-Lazare", price: 200, type: "station" },
-  { name: "Chance", price: 0, type: "special" },
+  { name: "Chance", price: 0, type: "chance" },
   { name: "Champs-Élysées", price: 350, type: "prop", color: "#0066b2" },
   { name: "Taxe de Luxe", price: 0, type: "tax" },
   { name: "Rue de la Paix", price: 400, type: "prop", color: "#0066b2" }
@@ -309,6 +189,7 @@ for(let i=1; i<10; i++) tilePositions.push([i, 10]);
 monopolyData.forEach((data, index) => {
   const tile = document.createElement('div');
   tile.className = 'tile';
+  tile.id = `tile-${index}`;
   const pos = tilePositions[index];
   tile.style.gridRow = pos[0] + 1;
   tile.style.gridColumn = pos[1] + 1;
@@ -322,14 +203,10 @@ monopolyData.forEach((data, index) => {
 
   const nameDiv = document.createElement('div');
   nameDiv.className = 'tile-name';
+  nameDiv.id = `tile-name-${index}`;
   nameDiv.innerHTML = `<span>${data.name}</span>`;
-  if(data.price > 0) nameDiv.innerHTML += `<span class="tile-price">${data.price}$</span>`;
+  if(data.price > 0) nameDiv.innerHTML += `<span class="tile-price" id="price-label-${index}">${data.price}$</span>`;
   tile.appendChild(nameDiv);
-
-  const ownerBar = document.createElement('div');
-  ownerBar.className = 'tile-owner-bar';
-  ownerBar.id = `owner-bar-${index}`;
-  tile.appendChild(ownerBar);
 
   const pionsContainer = document.createElement('div');
   pionsContainer.className = 'pions-container';
@@ -346,68 +223,101 @@ function joinGame(){
   const username = document.getElementById('username').value.trim();
   roomId = document.getElementById('room').value.trim();
   if(!username || !roomId) return alert("Champs vides !");
-
   document.getElementById('room-display').innerText = `Salle : ${roomId}`;
   socket.emit('joinRoom', { username, roomId });
   document.getElementById('menu').style.display = 'none';
   document.getElementById('game').style.display = 'flex';
 }
 
-function startGame() {
-  socket.emit('startGame', roomId);
-}
+function startGame() { socket.emit('startGame', roomId); }
 
 socket.on('gameState', state => {
   gameState = state;
   render();
 });
 
+// ÉCOUTEUR DE DÉS DU SERVEUR
+socket.on('diceRolled', data => {
+  animateDice(data.d1, data.d2);
+});
+
 socket.on('log', message => addLog(message));
+
+function animateDice(v1, v2) {
+  const area = document.getElementById('dice-area');
+  const d1 = document.getElementById('dice1');
+  const d2 = document.getElementById('dice2');
+
+  area.style.display = 'flex';
+  d1.classList.add('rolling');
+  d2.classList.add('rolling');
+
+  // Simulation d'un roulement aléatoire visuel rapide
+  let counter = 0;
+  let interval = setInterval(() => {
+    d1.innerText = Math.floor(Math.random() * 6) + 1;
+    d2.innerText = Math.floor(Math.random() * 6) + 1;
+    counter++;
+    if(counter > 10) {
+      clearInterval(interval);
+      // Affichage du vrai résultat final renvoyé par le serveur
+      d1.classList.remove('rolling');
+      d2.classList.remove('rolling');
+      d1.innerText = v1;
+      d2.innerText = v2;
+    }
+  }, 70);
+}
 
 function render() {
   if (!gameState) return;
 
+  // Reset pions et styles
   document.querySelectorAll('.player-token').forEach(p => p.remove());
-  document.querySelectorAll('.tile-owner-bar').forEach(bar => { bar.style.backgroundColor = 'transparent'; bar.innerText = ''; });
+  monopolyData.forEach((data, index) => {
+    const tile = document.getElementById(`tile-${index}`);
+    const priceLabel = document.getElementById(`price-label-${index}`);
+    tile.className = 'tile';
+    tile.style.backgroundColor = '#f8fafc';
+    if(priceLabel && data.price > 0) priceLabel.innerText = `${data.price}$`;
+  });
 
   const startBtn = document.getElementById('start-btn-center');
   const turnIndicator = document.getElementById('turn-indicator');
   const rollBtn = document.getElementById('roll-btn');
   const buyBtn = document.getElementById('buy-btn');
+  const diceArea = document.getElementById('dice-area');
 
-  // Gestion de l'état "Lancé" ou "Attente"
   if (!gameState.gameStarted) {
     rollBtn.disabled = true;
     buyBtn.disabled = true;
     turnIndicator.innerText = "En attente du lancement par le chef de salle...";
-    
-    // N'affiche le bouton de démarrage qu'au créateur de la salle
-    if (gameState.creatorId === socket.id) {
-      startBtn.style.display = 'block';
-    } else {
-      startBtn.style.display = 'none';
-    }
+    startBtn.style.display = (gameState.creatorId === socket.id) ? 'block' : 'none';
   } else {
-    // La partie a commencé, on cache le bouton start définitivement
     startBtn.style.display = 'none';
-    
+    diceArea.style.display = (diceArea.style.display === 'none') ? 'flex' : diceArea.style.display; 
     const activePlayer = gameState.players[gameState.currentPlayer];
     if (activePlayer) {
-      turnIndicator.innerText = `C'est au tour de : ${activePlayer.username}`;
-      rollBtn.disabled = (activePlayer.id !== socket.id); // Active le bouton uniquement si c'est son tour
+      turnIndicator.innerText = activePlayer.inJail ? `🔒 ${activePlayer.username} (En prison ! Tour passé)` : `C'est au tour de : ${activePlayer.username}`;
+      rollBtn.disabled = (activePlayer.id !== socket.id);
     }
   }
 
-  // Affichage des propriétés achetées
+  // Fond des cases achetées
   for (let tileIndex in gameState.owners) {
     const ownerObj = gameState.players.find(p => p.id === gameState.owners[tileIndex]);
     if (ownerObj) {
-      const bar = document.getElementById(`owner-bar-${tileIndex}`);
-      if (bar) { bar.style.backgroundColor = ownerObj.color; bar.innerText = "Acheté"; }
+      const tile = document.getElementById(`tile-${tileIndex}`);
+      const priceLabel = document.getElementById(`price-label-${tileIndex}`);
+      if (tile) {
+        tile.classList.add('owned');
+        tile.style.backgroundColor = ownerObj.color;
+        if(priceLabel) priceLabel.innerText = `Pr. ${ownerObj.username}`;
+      }
     }
   }
 
-  // Mise à jour de la liste des joueurs et pions
+  // Sidebar joueurs et pions
   const playersDiv = document.getElementById('players');
   playersDiv.innerHTML = '';
 
@@ -418,7 +328,7 @@ function render() {
     row.innerHTML = `
       <div class="player-info">
         <div class="player-dot" style="background:${player.color}"></div>
-        <span><strong>${player.username}</strong> ${isHisTurn ? '🎲' : ''}</span>
+        <span><strong>${player.username}</strong> ${player.inJail ? '🔒' : ''} ${isHisTurn ? '🎲' : ''}</span>
       </div>
       <span>💰 ${player.money} $</span>
     `;
@@ -432,7 +342,7 @@ function render() {
     if (container) container.appendChild(token);
   });
 
-  // Gestion du bouton achat local
+  // Bouton achat local
   const mySelf = gameState.players.find(p => p.id === socket.id);
   if (mySelf && gameState.gameStarted) {
     const currentPos = mySelf.position;
@@ -444,7 +354,6 @@ function render() {
         buyBtn.disabled = true;
       } else {
         buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
-        // On ne peut acheter que si c'est immédiatement notre tour de jouer
         const lastPlayerIdx = (gameState.currentPlayer - 1 < 0) ? gameState.players.length - 1 : gameState.currentPlayer - 1;
         buyBtn.disabled = (gameState.players[lastPlayerIdx].id !== socket.id);
       }
