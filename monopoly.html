@@ -9,83 +9,64 @@
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-
     body { background: #0f172a; color: white; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     h1 { text-align: center; margin-bottom: 15px; color: #facc15; font-size: 2rem; }
 
-    .menu { max-width: 400px; width: 100%; margin: auto; background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    .menu { max-width: 400px; width: 100%; margin: auto; background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid #334155; }
     input, button { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: none; font-size: 1rem; }
     input { background: #0f172a; color: white; border: 2px solid #475569; }
-    input:focus { outline: none; border-color: #facc15; }
-
     button { background: #facc15; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
     button:hover { background: #e2b80d; }
     button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    .btn-buy { background: #10b981; color: white; }
-    .btn-buy:hover { background: #059669; }
-
     .game { display: none; gap: 20px; justify-content: center; align-items: center; max-width: 95vw; width: 100%; }
+    .board { width: min(78vh, 78vw); height: min(78vh, 78vw); background: #cbd5e1; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); border: 6px solid #1e293b; border-radius: 8px; }
 
-    .board { width: min(78vh, 78vw); height: min(78vh, 78vw); background: #cbd5e1; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); border: 6px solid #1e293b; border-radius: 8px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+    /* ZONE CENTRALE RECONFIGURABLE */
+    .center { grid-column: 2 / 11; grid-row: 2 / 11; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 10px; text-align: center; position: relative; overflow: hidden; }
+    .center h2 { font-size: min(3vh, 3vw); color: #facc15; }
 
-    .center { grid-column: 2 / 11; grid-row: 2 / 11; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 10px; text-align: center; position: relative; }
-    .center h2 { font-size: min(3.5vh, 3.5vw); color: #facc15; }
-    #start-btn-center { background: #e11d48; color: white; padding: 10px 20px; font-size: min(1.8vh, 1.8vw); border-radius: 20px; width: auto; margin-top: 15px; }
+    /* LE TITRE DE PROPRIÉTÉ (MODAL CENTRAL) */
+    .deed-card { background: white; color: #0f172a; width: 85%; height: 90%; border: 2px solid #0f172a; border-radius: 8px; padding: 8px; display: none; flex-direction: column; text-align: left; box-shadow: 0 10px 20px rgba(0,0,0,0.5); font-size: min(1.3vh, 1.3vw); }
+    .deed-header { width: 100%; text-align: center; padding: 6px; font-weight: bold; font-size: min(1.6vh, 1.6vw); border: 1px solid black; color: white; text-transform: uppercase; border-radius: 4px; }
+    .deed-title { font-weight: bold; text-align: center; margin: 5px 0; font-size: min(1.4vh, 1.4vw); text-transform: uppercase; }
+    .deed-row { display: flex; justify-content: space-between; margin: 2px 0; padding-bottom: 1px; border-bottom: 1px dashed #cbd5e1; }
+    .deed-btn-row { display: flex; gap: 5px; margin-top: auto; }
+    .deed-btn { padding: 6px; font-size: 11px; margin-top: 5px; cursor: pointer; border-radius: 5px; font-weight: bold; background: #3b82f6; color: white; }
+    .deed-btn.danger { background: #ef4444; }
+    .deed-btn.close { background: #64748b; }
 
-    #turn-indicator { margin-top: 10px; padding: 6px 16px; background: rgba(0,0,0,0.5); border-radius: 20px; font-size: min(1.5vh, 1.5vw); font-weight: bold; }
+    /* DÉS ANIMÉS */
+    .dice-area { display: flex; gap: min(2vh, 2vw); margin-top: 10px; }
+    .dice { width: min(6vh, 6vw); height: min(6vh, 6vw); background-color: white; color: #0f172a; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: min(3.5vh, 3.5vw); font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .rolling { animation: roll 0.4s infinite linear; }
 
-    /* --- ENSEMBLE DES DÉS ANIMÉS --- */
-    .dice-area { display: flex; gap: min(2vh, 2vw); margin-top: min(2vh, 2vw); margin-bottom: min(1vh, 1vw); }
-    
-    .dice {
-      width: min(6vh, 6vw);
-      height: min(6vh, 6vw);
-      background-color: white;
-      color: #0f172a;
-      border-radius: min(1vh, 1vw);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: min(3.5vh, 3.5vw);
-      font-weight: bold;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.1s;
-    }
-
-    /* Animation de secousse/rotation */
-    @keyframes roll {
-      0% { transform: rotate(0deg) scale(1); }
-      20% { transform: rotate(-20deg) scale(1.1); }
-      40% { transform: rotate(45deg) scale(0.9); }
-      60% { transform: rotate(-45deg) scale(1.2); }
-      80% { transform: rotate(180deg) scale(0.9); }
-      100% { transform: rotate(360deg) scale(1); }
-    }
-    .rolling { animation: roll 0.6s linear infinite; }
-
-    .tile { border: 1px solid #94a3b8; background: #f8fafc; color: #0f172a; font-size: min(0.95vh, 0.95vw); font-weight: bold; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; padding: 2px; overflow: hidden; transition: background-color 0.3s ease; }
+    /* TILES PLATEAU */
+    .tile { border: 1px solid #94a3b8; background: #f8fafc; color: #0f172a; font-size: min(0.9vh, 0.9vw); font-weight: bold; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; padding: 2px; overflow: hidden; cursor: pointer; position: relative; }
+    .tile:hover { filter: brightness(0.9); }
     .tile-color { width: 100%; height: 18%; border-bottom: 1px solid #94a3b8; }
     .tile-name { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
     .tile-price { color: #64748b; font-style: italic; }
+    .building-badge { position: absolute; top: 2px; right: 2px; background: #10b981; color: white; padding: 1px 3px; border-radius: 3px; font-size: 7px; font-weight: bold; }
 
+    /* CASES MODIFIÉES AVEC L'ÉTAT ACHETÉ/HYPOTHÉQUÉ */
     .tile.owned { color: #ffffff !important; }
-    .tile.owned .tile-price { color: rgba(255,255,255,0.8) !important; font-weight: bold; font-size: 8px; }
+    .tile.owned .tile-price { color: rgba(255,255,255,0.9) !important; font-size: 7px; }
+    .tile.mortgaged { background: #64748b !important; color: #cbd5e1 !important; border: 2px dashed #0f172a; }
 
     .pions-container { display: flex; gap: 2px; justify-content: center; align-items: center; width: 100%; min-height: 20%; }
-    .player-token { width: min(1.5vh, 1.5vw); height: min(1.5vh, 1.5vw); border-radius: 50%; border: 1.5px solid white; }
+    .player-token { width: min(1.4vh, 1.4vw); height: min(1.4vh, 1.4vw); border-radius: 50%; border: 1.5px solid white; }
 
     .sidebar { width: 320px; display: flex; flex-direction: column; gap: 15px; }
     .panel { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
     .panel h3 { border-bottom: 2px solid #334155; padding-bottom: 5px; margin-bottom: 10px; color: #facc15; }
-
     .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #334155; }
     .player-row.active-turn { background: rgba(250, 204, 21, 0.1); border-left: 3px solid #facc15; padding-left: 5px; }
     .player-info { display: flex; align-items: center; gap: 8px; }
     .player-dot { width: 10px; height: 10px; border-radius: 50%; }
-
-    .log { height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
-    .log p { margin-bottom: 5px; padding: 3px; border-left: 3px solid #facc15; background: rgba(255,255,255,0.05); }
+    .log { height: 130px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+    .log p { margin-bottom: 5px; padding: 3px; background: rgba(255,255,255,0.05); }
   </style>
 </head>
 <body>
@@ -101,17 +82,41 @@
 
 <div class="game" id="game">
   <div class="board" id="board">
-    <div class="center">
-      <h2>CITY EMPIRE</h2>
-      <p id="room-display" style="opacity: 0.7; font-size: 0.9rem;">Salle : -</p>
+    <div class="center" id="center-zone">
       
-      <div class="dice-area" id="dice-area" style="display: none;">
-        <div class="dice" id="dice1">🎲</div>
-        <div class="dice" id="dice2">🎲</div>
+      <div id="default-center-view" style="display: flex; flex-direction: column; align-items: center;">
+        <h2>CITY EMPIRE</h2>
+        <p id="room-display" style="opacity: 0.7; font-size: 0.8rem;">Salle : -</p>
+        <div class="dice-area" id="dice-area" style="display: none;">
+          <div class="dice" id="dice1">🎲</div>
+          <div class="dice" id="dice2">🎲</div>
+        </div>
+        <button id="start-btn-center" onclick="startGame()">DÉMARRER LA PARTIE 🚀</button>
+        <div id="turn-indicator" style="margin-top:10px;">En attente du lancement...</div>
       </div>
 
-      <button id="start-btn-center" onclick="startGame()">DÉMARRER LA PARTIE 🚀</button>
-      <div id="turn-indicator">En attente du lancement...</div>
+      <div class="deed-card" id="deed-card-view">
+        <div class="deed-header" id="deed-header-ui">TITRE DE PROPRIÉTÉ</div>
+        <div class="deed-title" id="deed-title-ui">Nom de la rue</div>
+        
+        <div class="deed-row"><strong>Loyer Terrain Nu :</strong> <span id="deed-r0">0$</span></div>
+        <div class="deed-row" style="color: #16a34a;"><strong>Avec Monopole (Nu x2) :</strong> <span id="deed-r1">0$</span></div>
+        <div class="deed-row"><strong>Avec 1 Maison :</strong> <span id="deed-r2">0$</span></div>
+        <div class="deed-row"><strong>Avec 2 Maisons :</strong> <span id="deed-r3">0$</span></div>
+        <div class="deed-row"><strong>Avec 3 Maisons :</strong> <span id="deed-r4">0$</span></div>
+        <div class="deed-row"><strong>Avec 4 Maisons :</strong> <span id="deed-r5">0$</span></div>
+        <div class="deed-row" style="font-weight: bold; color: #dc2626;"><strong>Avec HÔTEL :</strong> <span id="deed-r6">0$</span></div>
+        
+        <div class="deed-row" style="margin-top: 5px; border-top: 1px solid black;"><strong>Prix de la maison :</strong> <span id="deed-house-cost">0$</span></div>
+        <div class="deed-row"><strong>Valeur d'Hypothèque :</strong> <span id="deed-mortgage-val">0$</span></div>
+        
+        <div class="deed-btn-row">
+          <button class="deed-btn" id="deed-build-btn">Bâtir 🏠</button>
+          <button class="deed-btn danger" id="deed-mortgage-btn">Hypothéquer 🏦</button>
+          <button class="deed-btn close" onclick="closeDeedView()">Fermer ❌</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -120,14 +125,12 @@
       <h3>👥 Joueurs</h3>
       <div id="players"></div>
     </div>
-
     <div class="panel">
       <button id="roll-btn" onclick="rollDice()" style="margin-top:0;">🎲 Lancer les dés</button>
-      <button id="buy-btn" class="btn-buy" onclick="buyProperty()">💰 Acheter la propriété</button>
+      <button id="buy-btn" style="background:#10b981; color:white;" onclick="buyProperty()">💰 Acheter la case</button>
     </div>
-
     <div class="panel">
-      <h3>📜 Journal de bord</h3>
+      <h3>📜 Journal</h3>
       <div class="log" id="log"></div>
     </div>
   </div>
@@ -137,47 +140,48 @@
 const socket = io();
 const board = document.getElementById('board');
 
+// Données synchronisées client (groupes officiels)
 const monopolyData = [
   { name: "DÉPART", price: 0, type: "special" },
-  { name: "Boulevard de Belleville", price: 60, type: "prop", color: "#955436" },
+  { name: "Boulevard de Belleville", price: 60, type: "prop", color: "#955436", rents: [2, 4, 10, 30, 90, 160, 250], housePrice: 50 },
   { name: "Caisse de Communauté", price: 0, type: "special" },
-  { name: "Rue de Lecourbe", price: 60, type: "prop", color: "#955436" },
+  { name: "Rue de Lecourbe", price: 60, type: "prop", color: "#955436", rents: [4, 8, 20, 60, 180, 320, 450], housePrice: 50 },
   { name: "Impôt sur le Revenu", price: 0, type: "tax" },
-  { name: "Gare Montparnasse", price: 200, type: "station" },
-  { name: "Rue de Vaugirard", price: 100, type: "prop", color: "#39a4dc" },
+  { name: "Gare Montparnasse", price: 200, type: "station", rents: [25, 50, 100, 200] },
+  { name: "Rue de Vaugirard", price: 100, type: "prop", color: "#39a4dc", rents: [6, 12, 30, 90, 270, 400, 550], housePrice: 50 },
   { name: "Chance", price: 0, type: "chance" },
-  { name: "Rue de Courcelles", price: 100, type: "prop", color: "#39a4dc" },
-  { name: "Avenue de la République", price: 120, type: "prop", color: "#39a4dc" },
+  { name: "Rue de Courcelles", price: 100, type: "prop", color: "#39a4dc", rents: [6, 12, 30, 90, 270, 400, 550], housePrice: 50 },
+  { name: "Avenue de la République", price: 120, type: "prop", color: "#39a4dc", rents: [8, 16, 40, 100, 300, 450, 600], housePrice: 50 },
   { name: "PRISON", price: 0, type: "special" },
-  { name: "Boulevard de la Villette", price: 140, type: "prop", color: "#d93a96" },
-  { name: "Compagnie d'Électricité", price: 150, type: "service" },
-  { name: "Avenue de Neuilly", price: 140, type: "prop", color: "#d93a96" },
-  { name: "Rue de Paradis", price: 160, type: "prop", color: "#d93a96" },
-  { name: "Gare de Lyon", price: 200, type: "station" },
-  { name: "Avenue Mozart", price: 180, type: "prop", color: "#f29400" },
+  { name: "Boulevard de la Villette", price: 140, type: "prop", color: "#d93a96", rents: [10, 20, 50, 150, 450, 625, 750], housePrice: 100 },
+  { name: "Compagnie d'Électricité", price: 150, type: "service", rents: [20, 50] },
+  { name: "Avenue de Neuilly", price: 140, type: "prop", color: "#d93a96", rents: [10, 20, 50, 150, 450, 625, 750], housePrice: 100 },
+  { name: "Rue de Paradis", price: 160, type: "prop", color: "#d93a96", rents: [12, 24, 60, 180, 500, 700, 900], housePrice: 100 },
+  { name: "Gare de Lyon", price: 200, type: "station", rents: [25, 50, 100, 200] },
+  { name: "Avenue Mozart", price: 180, type: "prop", color: "#f29400", rents: [14, 28, 70, 200, 550, 750, 950], housePrice: 100 },
   { name: "Caisse de Communauté", price: 0, type: "special" },
-  { name: "Saint-Michel", price: 180, type: "prop", color: "#f29400" },
-  { name: "Place Pigalle", price: 200, type: "prop", color: "#f29400" },
+  { name: "Saint-Michel", price: 180, type: "prop", color: "#f29400", rents: [14, 28, 70, 200, 550, 750, 950], housePrice: 100 },
+  { name: "Place Pigalle", price: 200, type: "prop", color: "#f29400", rents: [16, 32, 80, 220, 600, 800, 1000], housePrice: 100 },
   { name: "PARC GRATUIT", price: 0, type: "special" },
-  { name: "Avenue Matignon", price: 220, type: "prop", color: "#e2001a" },
+  { name: "Avenue Matignon", price: 220, type: "prop", color: "#e2001a", rents: [18, 36, 90, 250, 700, 875, 1050], housePrice: 150 },
   { name: "Chance", price: 0, type: "chance" },
-  { name: "Avenue de l'Opéra", price: 220, type: "prop", color: "#e2001a" },
-  { name: "Rue de la Paix", price: 240, type: "prop", color: "#e2001a" },
-  { name: "Gare du Nord", price: 200, type: "station" },
-  { name: "Faubourg Saint-Honoré", price: 260, type: "prop", color: "#fdf100" },
-  { name: "Place de la Bourse", price: 260, type: "prop", color: "#fdf100" },
-  { name: "Compagnie des Eaux", price: 150, type: "service" },
-  { name: "Rue La Fayette", price: 280, type: "prop", color: "#fdf100" },
+  { name: "Avenue de l'Opéra", price: 220, type: "prop", color: "#e2001a", rents: [18, 36, 90, 250, 700, 875, 1050], housePrice: 150 },
+  { name: "Rue de la Paix", price: 240, type: "prop", color: "#e2001a", rents: [20, 40, 100, 300, 750, 925, 1100], housePrice: 150 },
+  { name: "Gare du Nord", price: 200, type: "station", rents: [25, 50, 100, 200] },
+  { name: "Faubourg Saint-Honoré", price: 260, type: "prop", color: "#fdf100", rents: [22, 44, 110, 330, 800, 975, 1150], housePrice: 150 },
+  { name: "Place de la Bourse", price: 260, type: "prop", color: "#fdf100", rents: [22, 44, 110, 330, 800, 975, 1150], housePrice: 150 },
+  { name: "Compagnie des Eaux", price: 150, type: "service", rents: [20, 50] },
+  { name: "Rue La Fayette", price: 280, type: "prop", color: "#fdf100", rents: [24, 48, 120, 360, 850, 1025, 1200], housePrice: 150 },
   { name: "ALLEZ EN PRISON", price: 0, type: "go-to-jail" },
-  { name: "Avenue de Breteuil", price: 300, type: "prop", color: "#1fa147" },
-  { name: "Avenue Foch", price: 300, type: "prop", color: "#1fa147" },
+  { name: "Avenue de Breteuil", price: 300, type: "prop", color: "#1fa147", rents: [26, 52, 130, 390, 900, 1100, 1275], housePrice: 200 },
+  { name: "Avenue Foch", price: 300, type: "prop", color: "#1fa147", rents: [26, 52, 130, 390, 900, 1100, 1275], housePrice: 200 },
   { name: "Caisse de Communauté", price: 0, type: "special" },
-  { name: "Capucines", price: 320, type: "prop", color: "#1fa147" },
-  { name: "Gare Saint-Lazare", price: 200, type: "station" },
+  { name: "Capucines", price: 320, type: "prop", color: "#1fa147", rents: [28, 56, 150, 450, 1000, 1200, 1400], housePrice: 200 },
+  { name: "Gare Saint-Lazare", price: 200, type: "station", rents: [25, 50, 100, 200] },
   { name: "Chance", price: 0, type: "chance" },
-  { name: "Champs-Élysées", price: 350, type: "prop", color: "#0066b2" },
+  { name: "Champs-Élysées", price: 350, type: "prop", color: "#0066b2", rents: [35, 70, 175, 500, 1100, 1300, 1500], housePrice: 200 },
   { name: "Taxe de Luxe", price: 0, type: "tax" },
-  { name: "Rue de la Paix", price: 400, type: "prop", color: "#0066b2" }
+  { name: "Rue de la Paix", price: 400, type: "prop", color: "#0066b2", rents: [50, 100, 200, 600, 1400, 1700, 2000], housePrice: 200 }
 ];
 
 const tilePositions = [];
@@ -186,6 +190,7 @@ for(let i=1; i<11; i++) tilePositions.push([10-i, 0]);
 for(let i=1; i<11; i++) tilePositions.push([0, i]);
 for(let i=1; i<10; i++) tilePositions.push([i, 10]);
 
+// Génération visuelle des cases
 monopolyData.forEach((data, index) => {
   const tile = document.createElement('div');
   tile.className = 'tile';
@@ -194,7 +199,10 @@ monopolyData.forEach((data, index) => {
   tile.style.gridRow = pos[0] + 1;
   tile.style.gridColumn = pos[1] + 1;
 
-  if (data.type === 'prop' && data.color) {
+  // Rendre la case cliquable pour voir son titre de propriété
+  tile.onclick = () => openDeedView(index);
+
+  if ((data.type === 'prop') && data.color) {
     const colorBar = document.createElement('div');
     colorBar.className = 'tile-color';
     colorBar.style.backgroundColor = data.color;
@@ -231,49 +239,87 @@ function joinGame(){
 
 function startGame() { socket.emit('startGame', roomId); }
 
-socket.on('gameState', state => {
-  gameState = state;
-  render();
-});
-
-// ÉCOUTEUR DE DÉS DU SERVEUR
-socket.on('diceRolled', data => {
-  animateDice(data.d1, data.d2);
-});
-
+socket.on('gameState', state => { gameState = state; render(); });
 socket.on('log', message => addLog(message));
+socket.on('diceRolled', data => animateDice(data.d1, data.d2));
 
 function animateDice(v1, v2) {
   const area = document.getElementById('dice-area');
   const d1 = document.getElementById('dice1');
   const d2 = document.getElementById('dice2');
-
   area.style.display = 'flex';
-  d1.classList.add('rolling');
-  d2.classList.add('rolling');
+  d1.classList.add('rolling'); d2.classList.add('rolling');
 
-  // Simulation d'un roulement aléatoire visuel rapide
   let counter = 0;
   let interval = setInterval(() => {
     d1.innerText = Math.floor(Math.random() * 6) + 1;
     d2.innerText = Math.floor(Math.random() * 6) + 1;
-    counter++;
-    if(counter > 10) {
+    if(++counter > 10) {
       clearInterval(interval);
-      // Affichage du vrai résultat final renvoyé par le serveur
-      d1.classList.remove('rolling');
-      d2.classList.remove('rolling');
-      d1.innerText = v1;
-      d2.innerText = v2;
+      d1.classList.remove('rolling'); d2.classList.remove('rolling');
+      d1.innerText = v1; d2.innerText = v2;
     }
-  }, 70);
+  }, 60);
+}
+
+// INTERFACE DU TITRE DE PROPRIÉTÉ DYNAMIQUE
+function openDeedView(index) {
+  const item = monopolyData[index];
+  if (item.price === 0) return; // Pas une propriété achetable
+
+  document.getElementById('default-center-view').style.display = 'none';
+  const card = document.getElementById('deed-card-view');
+  card.style.display = 'flex';
+
+  document.getElementById('deed-title-ui').innerText = item.name;
+  const header = document.getElementById('deed-header-ui');
+  header.style.backgroundColor = item.color || '#475569';
+
+  // Attribution des textes de loyers depuis la BDD
+  document.getElementById('deed-r0').innerText = `${item.rents[0]}$`;
+  document.getElementById('deed-r1').innerText = `${item.rents[1]}$`;
+  document.getElementById('deed-r2').innerText = `${item.rents[2] || '- '}$`;
+  document.getElementById('deed-r3').innerText = `${item.rents[3] || '- '}$`;
+  document.getElementById('deed-r4').innerText = `${item.rents[4] || '- '}$`;
+  document.getElementById('deed-r5').innerText = `${item.rents[5] || '- '}$`;
+  document.getElementById('deed-r6').innerText = `${item.rents[6] || '- '}$`;
+  
+  document.getElementById('deed-house-cost').innerText = item.housePrice ? `${item.housePrice}$` : "Non Bâtissable";
+  document.getElementById('deed-mortgage-val').innerText = `${Math.floor(item.price / 2)}$`;
+
+  // Actions de boutons du Modal
+  const buildBtn = document.getElementById('deed-build-btn');
+  const mortgageBtn = document.getElementById('deed-mortgage-btn');
+
+  if (gameState) {
+    const isOwner = (gameState.owners[index] === socket.id);
+    const isMortgaged = gameState.mortgaged[index];
+    
+    // Config bouton Hypothèque
+    mortgageBtn.disabled = !isOwner || (gameState.buildings[index] > 0);
+    mortgageBtn.innerText = isMortgaged ? "Lever Hypothèque 🔓" : "Hypothéquer 🏦";
+    mortgageBtn.onclick = () => { socket.emit('toggleMortgage', { roomId, tileIndex: index }); closeDeedView(); };
+
+    // Config bouton Bâtir
+    buildBtn.disabled = !isOwner || isMortgaged || !item.housePrice || (gameState.buildings[index] >= 5);
+    buildBtn.onclick = () => { socket.emit('buildHouse', { roomId, tileIndex: index }); closeDeedView(); };
+  } else {
+    buildBtn.disabled = true; mortgageBtn.disabled = true;
+  }
+}
+
+function closeDeedView() {
+  document.getElementById('deed-card-view').style.display = 'none';
+  document.getElementById('default-center-view').style.display = 'flex';
 }
 
 function render() {
   if (!gameState) return;
 
-  // Reset pions et styles
+  // Reset visuel du plateau
   document.querySelectorAll('.player-token').forEach(p => p.remove());
+  document.querySelectorAll('.building-badge').forEach(b => b.remove());
+
   monopolyData.forEach((data, index) => {
     const tile = document.getElementById(`tile-${index}`);
     const priceLabel = document.getElementById(`price-label-${index}`);
@@ -282,45 +328,48 @@ function render() {
     if(priceLabel && data.price > 0) priceLabel.innerText = `${data.price}$`;
   });
 
-  const startBtn = document.getElementById('start-btn-center');
-  const turnIndicator = document.getElementById('turn-indicator');
-  const rollBtn = document.getElementById('roll-btn');
-  const buyBtn = document.getElementById('buy-btn');
-  const diceArea = document.getElementById('dice-area');
-
-  if (!gameState.gameStarted) {
-    rollBtn.disabled = true;
-    buyBtn.disabled = true;
-    turnIndicator.innerText = "En attente du lancement par le chef de salle...";
-    startBtn.style.display = (gameState.creatorId === socket.id) ? 'block' : 'none';
-  } else {
-    startBtn.style.display = 'none';
-    diceArea.style.display = (diceArea.style.display === 'none') ? 'flex' : diceArea.style.display; 
-    const activePlayer = gameState.players[gameState.currentPlayer];
-    if (activePlayer) {
-      turnIndicator.innerText = activePlayer.inJail ? `🔒 ${activePlayer.username} (En prison ! Tour passé)` : `C'est au tour de : ${activePlayer.username}`;
-      rollBtn.disabled = (activePlayer.id !== socket.id);
-    }
-  }
-
-  // Fond des cases achetées
+  // Rendu des Propriétés Achetées / Hypothéquées
   for (let tileIndex in gameState.owners) {
     const ownerObj = gameState.players.find(p => p.id === gameState.owners[tileIndex]);
-    if (ownerObj) {
-      const tile = document.getElementById(`tile-${tileIndex}`);
-      const priceLabel = document.getElementById(`price-label-${tileIndex}`);
-      if (tile) {
-        tile.classList.add('owned');
-        tile.style.backgroundColor = ownerObj.color;
-        if(priceLabel) priceLabel.innerText = `Pr. ${ownerObj.username}`;
+    const tile = document.getElementById(`tile-${tileIndex}`);
+    const priceLabel = document.getElementById(`price-label-${tileIndex}`);
+    
+    if (tile && ownerObj) {
+      tile.classList.add('owned');
+      tile.style.backgroundColor = ownerObj.color;
+      if (priceLabel) priceLabel.innerText = `Pr. ${ownerObj.username}`;
+
+      // Si la case est hypothéquée
+      if (gameState.mortgaged[tileIndex]) {
+        tile.classList.add('mortgaged');
+        if (priceLabel) priceLabel.innerText = `⚠️ HYPOTHÉQUÉ`;
+      }
+
+      // Dessiner l'indicateur de maisons / hôtels
+      const nbBuildings = gameState.buildings[tileIndex] || 0;
+      if (nbBuildings > 0 && !gameState.mortgaged[tileIndex]) {
+        const badge = document.createElement('div');
+        badge.className = 'building-badge';
+        badge.innerText = nbBuildings === 5 ? "🏨 Htl" : `🏠 ${nbBuildings}`;
+        tile.appendChild(badge);
       }
     }
   }
 
-  // Sidebar joueurs et pions
+  // Barre d'outils latérale
+  const activePlayer = gameState.players[gameState.currentPlayer];
+  const turnIndicator = document.getElementById('turn-indicator');
+  const rollBtn = document.getElementById('roll-btn');
+  const buyBtn = document.getElementById('buy-btn');
+
+  if (gameState.gameStarted && activePlayer) {
+    turnIndicator.innerText = activePlayer.inJail ? `🔒 ${activePlayer.username} (En prison)` : `C'est au tour de : ${activePlayer.username}`;
+    rollBtn.disabled = (activePlayer.id !== socket.id);
+  }
+
+  // Sidebar Joueurs
   const playersDiv = document.getElementById('players');
   playersDiv.innerHTML = '';
-
   gameState.players.forEach((player, idx) => {
     const isHisTurn = (idx === gameState.currentPlayer && gameState.gameStarted);
     const row = document.createElement('div');
@@ -328,38 +377,29 @@ function render() {
     row.innerHTML = `
       <div class="player-info">
         <div class="player-dot" style="background:${player.color}"></div>
-        <span><strong>${player.username}</strong> ${player.inJail ? '🔒' : ''} ${isHisTurn ? '🎲' : ''}</span>
+        <span><strong>${player.username}</strong> ${player.inJail ? '🔒' : ''}</span>
       </div>
-      <span>💰 ${player.money} $</span>
+      <span>💰 <strong>${player.money}$</strong></span>
     `;
     playersDiv.appendChild(row);
 
+    // Positionnement des pions
     const token = document.createElement('div');
     token.className = 'player-token';
     token.style.backgroundColor = player.color;
-
-    const container = document.getElementById(`pions-case-${player.position}`);
-    if (container) container.appendChild(token);
+    document.getElementById(`pions-case-${player.position}`).appendChild(token);
   });
 
-  // Bouton achat local
+  // Configuration bouton achat rapide
   const mySelf = gameState.players.find(p => p.id === socket.id);
   if (mySelf && gameState.gameStarted) {
-    const currentPos = mySelf.position;
-    const currentTileData = monopolyData[currentPos];
-    
-    if (currentTileData.price > 0) {
-      if (gameState.owners[currentPos]) {
-        buyBtn.innerText = "Déjà possédé 🏠";
-        buyBtn.disabled = true;
-      } else {
-        buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
-        const lastPlayerIdx = (gameState.currentPlayer - 1 < 0) ? gameState.players.length - 1 : gameState.currentPlayer - 1;
-        buyBtn.disabled = (gameState.players[lastPlayerIdx].id !== socket.id);
-      }
+    const currentTileData = monopolyData[mySelf.position];
+    if (currentTileData.price > 0 && !gameState.owners[mySelf.position]) {
+      buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
+      const lastPlayerIdx = (gameState.currentPlayer - 1 < 0) ? gameState.players.length - 1 : gameState.currentPlayer - 1;
+      buyBtn.disabled = (gameState.players[lastPlayerIdx].id !== socket.id);
     } else {
-      buyBtn.innerText = "Case non achetable";
-      buyBtn.disabled = true;
+      buyBtn.innerText = "Non achetable"; buyBtn.disabled = true;
     }
   }
 }
