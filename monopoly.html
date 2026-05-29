@@ -18,19 +18,19 @@
     body {
       background: #0f172a;
       color: white;
-      padding: 20px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       color: #facc15;
-      font-size: 2.5rem;
-      text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      font-size: 2rem;
     }
 
     .menu {
@@ -44,117 +44,96 @@
       border: 1px solid #334155;
     }
 
-    .menu h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #cbd5e1;
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
     }
 
     input {
-      width: 100%;
-      padding: 12px 16px;
-      margin-top: 15px;
-      border: 2px solid #475569;
-      border-radius: 10px;
       background: #0f172a;
       color: white;
-      font-size: 1rem;
-      transition: border-color 0.2s;
+      border: 2px solid #475569;
     }
 
-    input:focus {
-      outline: none;
-      border-color: #facc15;
-    }
+    input:focus { outline: none; border-color: #facc15; }
 
     button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 10px;
       background: #facc15;
       color: #0f172a;
       font-weight: bold;
-      font-size: 1rem;
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
     }
 
-    button:hover {
-      background: #e2b80d;
-    }
+    button:hover { background: #e2b80d; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    button:active {
-      transform: scale(0.98);
-    }
+    .btn-buy { background: #10b981; color: white; }
+    .btn-buy:hover { background: #059669; }
 
-    .btn-buy {
-      background: #10b981;
-      color: white;
-    }
-    .btn-buy:hover {
-      background: #059669;
-    }
-
+    /* --- RESPONSIVE STRUCTURING --- */
     .game {
       display: none;
-      margin-top: 20px;
-      gap: 25px;
+      gap: 20px;
       justify-content: center;
-      align-items: flex-start;
-      max-width: 1200px;
+      align-items: center;
+      max-width: 95vw;
       width: 100%;
     }
 
-    /* --- PLATEAU DE JEU --- */
+    /* FIX : Taille responsive basée sur le plus petit côté de l'écran */
     .board {
-      width: 750px;
-      height: 750px;
+      width: min(78vh, 78vw);
+      height: min(78vh, 78vw);
       background: #cbd5e1;
       display: grid;
       grid-template-columns: repeat(11, 1fr);
       grid-template-rows: repeat(11, 1fr);
-      border: 8px solid #1e293b;
-      border-radius: 12px;
+      border: 6px solid #1e293b;
+      border-radius: 8px;
       box-shadow: 0 12px 24px rgba(0,0,0,0.4);
-      overflow: hidden;
     }
 
     .center {
       grid-column: 2 / 11;
       grid-row: 2 / 11;
-      background: #1e3a8a;
-      background-image: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
       color: white;
-      position: relative;
-      padding: 20px;
+      padding: 10px;
       text-align: center;
     }
 
     .center h2 {
-      font-size: 3rem;
+      font-size: min(3.5vh, 3.5vw);
       color: #facc15;
-      letter-spacing: 2px;
-      text-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
 
-    .center p {
-      font-size: 1.2rem;
-      opacity: 0.9;
-      margin-top: 10px;
+    #start-btn-center {
+      background: #e11d48;
+      color: white;
+      padding: 10px 20px;
+      font-size: min(1.8vh, 1.8vw);
+      border-radius: 20px;
+      width: auto;
+      margin-top: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
     #turn-indicator {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: rgba(0,0,0,0.4);
-      border-radius: 30px;
-      border: 1px solid rgba(255,255,255,0.1);
+      margin-top: 15px;
+      padding: 6px 16px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 20px;
+      font-size: min(1.5vh, 1.5vw);
       font-weight: bold;
     }
 
@@ -162,23 +141,18 @@
       border: 1px solid #94a3b8;
       background: #f8fafc;
       color: #0f172a;
-      font-size: 8px;
+      font-size: min(1vh, 1vw); /* Texte s'adapte à l'écran */
       font-weight: bold;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       text-align: center;
-      position: relative;
       padding: 2px;
+      overflow: hidden;
     }
 
-    /* Bandeau de couleur pour les groupes */
-    .tile-color {
-      width: 100%;
-      height: 12px;
-      border-bottom: 1px solid #94a3b8;
-    }
+    .tile-color { width: 100%; height: 18%; border-bottom: 1px solid #94a3b8; }
 
     .tile-name {
       flex-grow: 1;
@@ -186,118 +160,54 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2px;
-      word-break: break-word;
-      line-height: 10px;
+      line-height: 1.1;
     }
 
-    .tile-price {
-      color: #475569;
-      font-style: italic;
-      margin-top: 1px;
-    }
+    .tile-price { color: #64748b; font-style: italic; }
 
-    /* Indicateur visuel du propriétaire */
-    .tile-owner-bar {
-      width: 100%;
-      height: 6px;
-      margin-top: 2px;
-      font-size: 5px;
-      color: white;
-      line-height: 6px;
-      text-transform: uppercase;
-    }
+    .tile-owner-bar { width: 100%; height: 8%; font-size: 7px; color: white; }
 
-    /* Zone d'alignement des pions */
     .pions-container {
       display: flex;
       gap: 2px;
       justify-content: center;
       align-items: center;
       width: 100%;
-      min-height: 15px;
-      margin-top: 2px;
+      min-height: 20%;
     }
 
     .player-token {
-      width: 12px;
-      height: 12px;
+      width: min(1.5vh, 1.5vw);
+      height: min(1.5vh, 1.5vw);
       border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      border: 1.5px solid white;
     }
 
-    /* --- SIDEBAR & PANELS --- */
+    /* --- SIDEBAR --- */
     .sidebar {
-      width: 350px;
+      width: 320px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 15px;
     }
 
     .panel {
       background: #1e293b;
-      padding: 20px;
-      border-radius: 15px;
+      padding: 15px;
+      border-radius: 12px;
       border: 1px solid #334155;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
 
-    .panel h3 {
-      border-bottom: 2px solid #334155;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-      color: #facc15;
-    }
+    .panel h3 { border-bottom: 2px solid #334155; padding-bottom: 5px; margin-bottom: 10px; color: #facc15; }
 
-    .player-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #334155;
-    }
+    .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #334155; }
+    .player-row.active-turn { background: rgba(250, 204, 21, 0.1); border-left: 3px solid #facc15; padding-left: 5px; }
 
-    .player-row.active-turn {
-      background: rgba(250, 204, 21, 0.1);
-      border-left: 4px solid #facc15;
-      padding-left: 6px;
-    }
+    .player-info { display: flex; align-items: center; gap: 8px; }
+    .player-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    .player-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .player-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .log {
-      height: 180px;
-      overflow-y: auto;
-      font-family: monospace;
-      font-size: 0.85rem;
-      padding-right: 5px;
-    }
-
-    .log p {
-      margin-bottom: 8px;
-      padding: 4px;
-      border-left: 3px solid #facc15;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .log::-webkit-scrollbar {
-      width: 6px;
-    }
-    .log::-webkit-scrollbar-thumb {
-      background: #475569;
-      border-radius: 3px;
-    }
+    .log { height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+    .log p { margin-bottom: 5px; padding: 3px; border-left: 3px solid #facc15; background: rgba(255,255,255,0.05); }
   </style>
 </head>
 <body>
@@ -305,9 +215,9 @@
 <h1>🏙️ CITY EMPIRE ONLINE</h1>
 
 <div class="menu" id="menu">
-  <h2>Créer ou Rejoindre</h2>
-  <input type="text" id="username" placeholder="Votre Pseudo (ex: Alex)">
-  <input type="text" id="room" placeholder="Code de la salle (ex: 123)">
+  <h2 style="text-align:center;">Créer ou Rejoindre</h2>
+  <input type="text" id="username" placeholder="Pseudo">
+  <input type="text" id="room" placeholder="Code de salle">
   <button onclick="joinGame()">REJOINDRE LA PARTIE</button>
 </div>
 
@@ -316,20 +226,22 @@
   <div class="board" id="board">
     <div class="center">
       <h2>CITY EMPIRE</h2>
-      <p id="room-display">Salle : -</p>
-      <div id="turn-indicator">En attente de joueurs...</div>
+      <p id="room-display" style="opacity: 0.7; font-size: 0.9rem;">Salle : -</p>
+      
+      <button id="start-btn-center" onclick="startGame()">DÉMARRER LA PARTIE 🚀</button>
+      
+      <div id="turn-indicator">En attente du lancement...</div>
     </div>
   </div>
 
   <div class="sidebar">
-
     <div class="panel">
       <h3>👥 Joueurs</h3>
       <div id="players"></div>
     </div>
 
     <div class="panel">
-      <button onclick="rollDice()" style="margin-top:0;">🎲 Lancer les dés</button>
+      <button id="roll-btn" onclick="rollDice()" style="margin-top:0;">🎲 Lancer les dés</button>
       <button id="buy-btn" class="btn-buy" onclick="buyProperty()">💰 Acheter la propriété</button>
     </div>
 
@@ -337,17 +249,14 @@
       <h3>📜 Journal de bord</h3>
       <div class="log" id="log"></div>
     </div>
-
   </div>
 
 </div>
 
 <script>
-
 const socket = io();
 const board = document.getElementById('board');
 
-// Base de données des 40 cases (Doit correspondre exactement au serveur)
 const monopolyData = [
   { name: "DÉPART", price: 0, type: "special" },
   { name: "Boulevard de Belleville", price: 60, type: "prop", color: "#955436" },
@@ -359,7 +268,6 @@ const monopolyData = [
   { name: "Chance", price: 0, type: "special" },
   { name: "Rue de Courcelles", price: 100, type: "prop", color: "#39a4dc" },
   { name: "Avenue de la République", price: 120, type: "prop", color: "#39a4dc" },
-  
   { name: "PRISON", price: 0, type: "special" },
   { name: "Boulevard de la Villette", price: 140, type: "prop", color: "#d93a96" },
   { name: "Compagnie d'Électricité", price: 150, type: "service" },
@@ -370,7 +278,6 @@ const monopolyData = [
   { name: "Caisse de Communauté", price: 0, type: "special" },
   { name: "Saint-Michel", price: 180, type: "prop", color: "#f29400" },
   { name: "Place Pigalle", price: 200, type: "prop", color: "#f29400" },
-  
   { name: "PARC GRATUIT", price: 0, type: "special" },
   { name: "Avenue Matignon", price: 220, type: "prop", color: "#e2001a" },
   { name: "Chance", price: 0, type: "special" },
@@ -381,7 +288,6 @@ const monopolyData = [
   { name: "Place de la Bourse", price: 260, type: "prop", color: "#fdf100" },
   { name: "Compagnie des Eaux", price: 150, type: "service" },
   { name: "Rue La Fayette", price: 280, type: "prop", color: "#fdf100" },
-  
   { name: "ALLEZ EN PRISON", price: 0, type: "special" },
   { name: "Avenue de Breteuil", price: 300, type: "prop", color: "#1fa147" },
   { name: "Avenue Foch", price: 300, type: "prop", color: "#1fa147" },
@@ -394,19 +300,15 @@ const monopolyData = [
   { name: "Rue de la Paix", price: 400, type: "prop", color: "#0066b2" }
 ];
 
-// Positionnement en grille
 const tilePositions = [];
 for(let i=0; i<11; i++) tilePositions.push([10, 10-i]);
 for(let i=1; i<11; i++) tilePositions.push([10-i, 0]);
 for(let i=1; i<11; i++) tilePositions.push([0, i]);
 for(let i=1; i<10; i++) tilePositions.push([i, 10]);
 
-// Génération graphique initiale du plateau
 monopolyData.forEach((data, index) => {
   const tile = document.createElement('div');
   tile.className = 'tile';
-  tile.id = `tile-box-${index}`;
-  
   const pos = tilePositions[index];
   tile.style.gridRow = pos[0] + 1;
   tile.style.gridColumn = pos[1] + 1;
@@ -421,18 +323,14 @@ monopolyData.forEach((data, index) => {
   const nameDiv = document.createElement('div');
   nameDiv.className = 'tile-name';
   nameDiv.innerHTML = `<span>${data.name}</span>`;
-  if(data.price > 0) {
-    nameDiv.innerHTML += `<span class="tile-price">${data.price}$</span>`;
-  }
+  if(data.price > 0) nameDiv.innerHTML += `<span class="tile-price">${data.price}$</span>`;
   tile.appendChild(nameDiv);
 
-  // Barre propriétaire (masquée par défaut)
   const ownerBar = document.createElement('div');
   ownerBar.className = 'tile-owner-bar';
   ownerBar.id = `owner-bar-${index}`;
   tile.appendChild(ownerBar);
 
-  // Conteneur de pions
   const pionsContainer = document.createElement('div');
   pionsContainer.className = 'pions-container';
   pionsContainer.id = `pions-case-${index}`;
@@ -447,15 +345,16 @@ let roomId = null;
 function joinGame(){
   const username = document.getElementById('username').value.trim();
   roomId = document.getElementById('room').value.trim();
-
-  if(!username || !roomId) return alert("Veuillez remplir les champs !");
+  if(!username || !roomId) return alert("Champs vides !");
 
   document.getElementById('room-display').innerText = `Salle : ${roomId}`;
-
   socket.emit('joinRoom', { username, roomId });
-
   document.getElementById('menu').style.display = 'none';
   document.getElementById('game').style.display = 'flex';
+}
+
+function startGame() {
+  socket.emit('startGame', roomId);
 }
 
 socket.on('gameState', state => {
@@ -463,50 +362,57 @@ socket.on('gameState', state => {
   render();
 });
 
-socket.on('log', message => {
-  addLog(message);
-});
+socket.on('log', message => addLog(message));
 
 function render() {
   if (!gameState) return;
 
-  // 1. Nettoyer les anciens pions et les anciens affichages de propriétaires
   document.querySelectorAll('.player-token').forEach(p => p.remove());
-  document.querySelectorAll('.tile-owner-bar').forEach(bar => {
-    bar.style.backgroundColor = 'transparent';
-    bar.innerText = '';
-  });
+  document.querySelectorAll('.tile-owner-bar').forEach(bar => { bar.style.backgroundColor = 'transparent'; bar.innerText = ''; });
 
-  // 2. Gérer l'indicateur de tour central
-  const activePlayer = gameState.players[gameState.currentPlayer];
+  const startBtn = document.getElementById('start-btn-center');
   const turnIndicator = document.getElementById('turn-indicator');
-  
-  if (gameState.players.length > 0 && activePlayer) {
-    turnIndicator.innerText = `C'est au tour de : ${activePlayer.username}`;
-    turnIndicator.style.borderLeft = `5px solid ${activePlayer.color}`;
-  }
+  const rollBtn = document.getElementById('roll-btn');
+  const buyBtn = document.getElementById('buy-btn');
 
-  // 3. Dessiner les propriétaires actuels des propriétés sur le plateau
-  for (let tileIndex in gameState.owners) {
-    const ownerSocketId = gameState.owners[tileIndex];
-    const ownerObj = gameState.players.find(p => p.id === ownerSocketId);
+  // Gestion de l'état "Lancé" ou "Attente"
+  if (!gameState.gameStarted) {
+    rollBtn.disabled = true;
+    buyBtn.disabled = true;
+    turnIndicator.innerText = "En attente du lancement par le chef de salle...";
     
-    if (ownerObj) {
-      const bar = document.getElementById(`owner-bar-${tileIndex}`);
-      if (bar) {
-        bar.style.backgroundColor = ownerObj.color;
-        bar.innerText = "Acheté";
-      }
+    // N'affiche le bouton de démarrage qu'au créateur de la salle
+    if (gameState.creatorId === socket.id) {
+      startBtn.style.display = 'block';
+    } else {
+      startBtn.style.display = 'none';
+    }
+  } else {
+    // La partie a commencé, on cache le bouton start définitivement
+    startBtn.style.display = 'none';
+    
+    const activePlayer = gameState.players[gameState.currentPlayer];
+    if (activePlayer) {
+      turnIndicator.innerText = `C'est au tour de : ${activePlayer.username}`;
+      rollBtn.disabled = (activePlayer.id !== socket.id); // Active le bouton uniquement si c'est son tour
     }
   }
 
-  // 4. Mettre à jour la liste des joueurs (sidebar) et poser leurs pions
+  // Affichage des propriétés achetées
+  for (let tileIndex in gameState.owners) {
+    const ownerObj = gameState.players.find(p => p.id === gameState.owners[tileIndex]);
+    if (ownerObj) {
+      const bar = document.getElementById(`owner-bar-${tileIndex}`);
+      if (bar) { bar.style.backgroundColor = ownerObj.color; bar.innerText = "Acheté"; }
+    }
+  }
+
+  // Mise à jour de la liste des joueurs et pions
   const playersDiv = document.getElementById('players');
   playersDiv.innerHTML = '';
 
   gameState.players.forEach((player, idx) => {
-    // Ajout dans la sidebar
-    const isHisTurn = (idx === gameState.currentPlayer);
+    const isHisTurn = (idx === gameState.currentPlayer && gameState.gameStarted);
     const row = document.createElement('div');
     row.className = `player-row ${isHisTurn ? 'active-turn' : ''}`;
     row.innerHTML = `
@@ -518,53 +424,39 @@ function render() {
     `;
     playersDiv.appendChild(row);
 
-    // Dessiner le pion sur la case
     const token = document.createElement('div');
     token.className = 'player-token';
     token.style.backgroundColor = player.color;
-    token.title = player.username;
 
     const container = document.getElementById(`pions-case-${player.position}`);
-    if (container) {
-      container.appendChild(token);
-    }
+    if (container) container.appendChild(token);
   });
 
-  // 5. Mettre à jour dynamiquement le texte du bouton d'achat en fonction de la position du joueur local
-  // On récupère ton propre pion pour savoir le prix de ta case actuelle
+  // Gestion du bouton achat local
   const mySelf = gameState.players.find(p => p.id === socket.id);
-  const buyBtn = document.getElementById('buy-btn');
-  if (mySelf) {
+  if (mySelf && gameState.gameStarted) {
     const currentPos = mySelf.position;
     const currentTileData = monopolyData[currentPos];
     
     if (currentTileData.price > 0) {
-      // Si la case a déjà un propriétaire
       if (gameState.owners[currentPos]) {
         buyBtn.innerText = "Déjà possédé 🏠";
         buyBtn.disabled = true;
-        buyBtn.style.opacity = 0.5;
       } else {
         buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
-        buyBtn.disabled = false;
-        buyBtn.style.opacity = 1;
+        // On ne peut acheter que si c'est immédiatement notre tour de jouer
+        const lastPlayerIdx = (gameState.currentPlayer - 1 < 0) ? gameState.players.length - 1 : gameState.currentPlayer - 1;
+        buyBtn.disabled = (gameState.players[lastPlayerIdx].id !== socket.id);
       }
     } else {
       buyBtn.innerText = "Case non achetable";
       buyBtn.disabled = true;
-      buyBtn.style.opacity = 0.5;
     }
   }
 }
 
-function rollDice(){
-  socket.emit('rollDice', roomId);
-}
-
-function buyProperty() {
-  socket.emit('buyProperty', roomId);
-}
-
+function rollDice() { socket.emit('rollDice', roomId); }
+function buyProperty() { socket.emit('buyProperty', roomId); }
 function addLog(message){
   const log = document.getElementById('log');
   const p = document.createElement('p');
@@ -572,6 +464,5 @@ function addLog(message){
   log.prepend(p);
 }
 </script>
-
 </body>
 </html>
