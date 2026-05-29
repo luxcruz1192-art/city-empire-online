@@ -1,126 +1,466 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Monopoly V4 Online</title>
-<script src="/socket.io/socket.io.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>City Empire Online</title>
 
-<style>
-body{background:#0f172a;color:white;font-family:Arial;padding:10px}
-h1{text-align:center;color:#facc15}
+  <script src="/socket.io/socket.io.js"></script>
 
-.menu{max-width:400px;margin:auto;background:#111827;padding:15px;border-radius:10px}
-input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px}
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-.game{display:none;gap:20px;justify-content:center}
+    body {
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
 
-.board{
-width:700px;height:700px;
-display:grid;
-grid-template-columns:repeat(11,1fr);
-grid-template-rows:repeat(11,1fr);
-background:white;
-}
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #facc15;
+      font-size: 2.5rem;
+      text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
 
-.tile{border:1px solid black;font-size:10px;position:relative}
+    .menu {
+      max-width: 400px;
+      width: 100%;
+      margin: auto;
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
 
-.player{width:10px;height:10px;border-radius:50%;position:absolute}
+    .menu h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #cbd5e1;
+    }
 
-.sidebar{width:250px;background:#111827;padding:10px;border-radius:10px}
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-top: 15px;
+      border: 2px solid #475569;
+      border-radius: 10px;
+      background: #0f172a;
+      color: white;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
 
-.log{height:200px;overflow:auto;font-size:12px}
-</style>
+    input:focus {
+      outline: none;
+      border-color: #facc15;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 10px;
+      background: #facc15;
+      color: #0f172a;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #e2b80d;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .game {
+      display: none;
+      margin-top: 20px;
+      gap: 25px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    /* --- PLATEAU DE JEU --- */
+    .board {
+      width: 750px;
+      height: 750px;
+      background: #cbd5e1;
+      display: grid;
+      grid-template-columns: repeat(11, 1fr);
+      grid-template-rows: repeat(11, 1fr);
+      border: 8px solid #1e293b;
+      border-radius: 12px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+
+    .center {
+      grid-column: 2 / 11;
+      grid-row: 2 / 11;
+      background: #1e3a8a;
+      background-image: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+      position: relative;
+    }
+
+    .center h2 {
+      font-size: 3rem;
+      color: #facc15;
+      letter-spacing: 2px;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .center p {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-top: 10px;
+    }
+
+    .tile {
+      border: 1px solid #94a3b8;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 9px;
+      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      padding: 4px 2px;
+    }
+
+    /* Bandeau de couleur pour les propriétés */
+    .tile-color {
+      width: 100%;
+      height: 15px;
+      border-bottom: 1px solid #94a3b8;
+      margin-bottom: 2px;
+    }
+
+    .tile-name {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      word-break: break-word;
+    }
+
+    /* Zone d'alignement des pions */
+    .pions-container {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      min-height: 16px;
+      margin-top: 2px;
+    }
+
+    .player-token {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* --- SIDEBAR & PANELS --- */
+    .sidebar {
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .panel h3 {
+      border-bottom: 2px solid #334155;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      color: #facc15;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #334155;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .log {
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.9rem;
+      padding-right: 5px;
+    }
+
+    .log p {
+      margin-bottom: 8px;
+      padding: 4px;
+      border-left: 3px solid #facc15;
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* Scrollbar custom pour le log */
+    .log::-webkit-scrollbar {
+      width: 6px;
+    }
+    .log::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>🏙️ MONOPOLY V4</h1>
+<h1>🏙️ CITY EMPIRE ONLINE</h1>
 
 <div class="menu" id="menu">
-<input id="username" placeholder="Pseudo">
-<input id="room" placeholder="Room">
-<button onclick="join()">Jouer</button>
+  <h2>Créer ou Rejoindre</h2>
+  <input type="text" id="username" placeholder="Votre Pseudo (ex: Alex)">
+  <input type="text" id="room" placeholder="Code de la salle (ex: 123)">
+  <button onclick="joinGame()">REJOINDRE LA PARTIE</button>
 </div>
 
 <div class="game" id="game">
 
-<div class="board" id="board"></div>
+  <div class="board" id="board">
+    <div class="center">
+      <h2>CITY EMPIRE</h2>
+      <p>⚠️ En attente de joueurs...</p>
+    </div>
+  </div>
 
-<div class="sidebar">
-<button onclick="roll()">🎲 Lancer</button>
-<button onclick="buy()">💰 Acheter</button>
+  <div class="sidebar">
 
-<div id="players"></div>
-<div class="log" id="log"></div>
+    <div class="panel">
+      <h3>👥 Joueurs</h3>
+      <div id="players"></div>
+    </div>
 
-</div>
+    <div class="panel">
+      <button onclick="rollDice()" style="margin-top:0;">🎲 Lancer les dés</button>
+    </div>
+
+    <div class="panel">
+      <h3>📜 Journal de bord</h3>
+      <div class="log" id="log"></div>
+    </div>
+
+  </div>
 
 </div>
 
 <script>
 
 const socket = io();
+const board = document.getElementById('board');
 
-let roomId;
-let state;
+// Liste officielle simplifiée du Monopoly pour correspondre aux 40 cases
+const monopolyData = [
+  { name: "DÉPART", type: "special" },
+  { name: "Bld de Belleville", type: "prop", color: "#955436" },
+  { name: "Caisse de Communauté", type: "special" },
+  { name: "Rue de Lecourbe", type: "prop", color: "#955436" },
+  { name: "Impôt sur le Revenu", type: "tax" },
+  { name: "Gare Montparnasse", type: "station" },
+  { name: "Rue de Vaugirard", type: "prop", color: "#39a4dc" },
+  { name: "Chance", type: "special" },
+  { name: "Rue de Courcelles", type: "prop", color: "#39a4dc" },
+  { name: "Avenue de la République", type: "prop", color: "#39a4dc" },
+  
+  { name: "PRISON", type: "special" },
+  { name: "Bld de la Villette", type: "prop", color: "#d93a96" },
+  { name: "Compagnie d'Électricité", type: "service" },
+  { name: "Avenue de Neuilly", type: "prop", color: "#d93a96" },
+  { name: "Rue de Paradis", type: "prop", color: "#d93a96" },
+  { name: "Gare de Lyon", type: "station" },
+  { name: "Avenue Mozart", type: "prop", color: "#f29400" },
+  { name: "Caisse de Communauté", type: "special" },
+  { name: "Saint-Michel", type: "prop", color: "#f29400" },
+  { name: "Place Pigalle", type: "prop", color: "#f29400" },
+  
+  { name: "PARC GRATUIT", type: "special" },
+  { name: "Avenue Matignon", type: "prop", color: "#e2001a" },
+  { name: "Chance", type: "special" },
+  { name: "Avenue de l'Opéra", type: "prop", color: "#e2001a" },
+  { name: "Rue de la Paix", type: "prop", color: "#e2001a" },
+  { name: "Gare du Nord", type: "station" },
+  { name: "Faubourg Saint-Honoré", type: "prop", color: "#fdf100" },
+  { name: "Place de la Bourse", type: "prop", color: "#fdf100" },
+  { name: "Compagnie des Eaux", type: "service" },
+  { name: "Rue La Fayette", type: "prop", color: "#fdf100" },
+  
+  { name: "ALLEZ EN PRISON", type: "special" },
+  { name: "Avenue de Breteuil", type: "prop", color: "#1fa147" },
+  { name: "Avenue Foch", type: "prop", color: "#1fa147" },
+  { name: "Caisse de Communauté", type: "special" },
+  { name: "Capucines", type: "prop", color: "#1fa147" },
+  { name: "Gare Saint-Lazare", type: "station" },
+  { name: "Chance", type: "special" },
+  { name: "Champs-Élysées", type: "prop", color: "#0066b2" },
+  { name: "Taxe de Luxe", type: "tax" },
+  { name: "Rue de la Paix", type: "prop", color: "#0066b2" }
+];
 
-const board = document.getElementById("board");
-const playersDiv = document.getElementById("players");
+// Coordonnées CSS Grid de ton système de boucle (Bordures du carré 11x11)
+const tilePositions = [];
+for(let i=0; i<11; i++) tilePositions.push([10, 10-i]); // Bas (Droite vers Gauche)
+for(let i=1; i<11; i++) tilePositions.push([10-i, 0]);  // Gauche (Bas vers Haut)
+for(let i=1; i<11; i++) tilePositions.push([0, i]);     // Haut (Gauche vers Droite)
+for(let i=1; i<10; i++) tilePositions.push([i, 10]);    // Droite (Haut vers Bas)
 
-for(let i=0;i<40;i++){
-  const d=document.createElement("div");
-  d.className="tile";
-  d.innerText=i;
-  board.appendChild(d);
+const tileElements = [];
+
+// Génération visuelle du plateau
+monopolyData.forEach((data, index) => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  
+  const pos = tilePositions[index];
+  tile.style.gridRow = pos[0] + 1;
+  tile.style.gridColumn = pos[1] + 1;
+
+  // Si c'est une propriété, on ajoute une bande de couleur en haut
+  if (data.type === 'prop' && data.color) {
+    const colorBar = document.createElement('div');
+    colorBar.className = 'tile-color';
+    colorBar.style.backgroundColor = data.color;
+    tile.appendChild(colorBar);
+  }
+
+  // Nom de la case
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'tile-name';
+  nameDiv.innerText = data.name;
+  tile.appendChild(nameDiv);
+
+  // Conteneur pour accueillir proprement les futurs pions des joueurs
+  const pionsContainer = document.createElement('div');
+  pionsContainer.className = 'pions-container';
+  pionsContainer.id = `pions-case-${index}`;
+  tile.appendChild(pionsContainer);
+
+  board.appendChild(tile);
+  tileElements.push(pionsContainer);
+});
+
+let gameState = null;
+let roomId = null;
+
+function joinGame(){
+  const username = document.getElementById('username').value.trim();
+  roomId = document.getElementById('room').value.trim();
+
+  if(!username || !roomId) return alert("Veuillez remplir les champs !");
+
+  socket.emit('joinRoom', { username, roomId });
+
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
 }
 
-function join(){
-  roomId=document.getElementById("room").value;
-
-  socket.emit("joinRoom",{
-    username:document.getElementById("username").value,
-    roomId
-  });
-
-  document.getElementById("menu").style.display="none";
-  document.getElementById("game").style.display="flex";
-}
-
-socket.on("gameState",s=>{
-  state=s;
+socket.on('gameState', state => {
+  gameState = state;
   render();
 });
 
-socket.on("log",l=>{
-  document.getElementById("log").innerHTML=l+"<br>"+document.getElementById("log").innerHTML;
+socket.on('log', message => {
+  addLog(message);
 });
 
-function render(){
+function render() {
+  // 1. Nettoyer les anciens pions du plateau
+  document.querySelectorAll('.player-token').forEach(p => p.remove());
 
-  document.querySelectorAll(".player").forEach(e=>e.remove());
-  playersDiv.innerHTML="";
+  // 2. Mettre à jour la liste des joueurs à droite
+  const playersDiv = document.getElementById('players');
+  playersDiv.innerHTML = '';
 
-  state.players.forEach((p,i)=>{
+  gameState.players.forEach((player) => {
+    // Ligne dans la sidebar
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <div class="player-info">
+        <div class="player-dot" style="background:${player.color}"></div>
+        <span><strong>${player.username}</strong></span>
+      </div>
+      <span>💰 ${player.money} $</span>
+    `;
+    playersDiv.appendChild(row);
 
-    playersDiv.innerHTML += `<div>${p.name} 💰${p.money}</div>`;
+    // 3. Dessiner le pion sur le plateau
+    const token = document.createElement('div');
+    token.className = 'player-token';
+    token.style.backgroundColor = player.color;
+    token.title = player.username; // Affiche le nom au survol
 
-    const t=document.createElement("div");
-    t.className="player";
-    t.style.background=p.color;
-    t.style.left=(i*12)+"px";
-
-    board.children[p.pos].appendChild(t);
+    // On l'ajoute dans le conteneur de pions de la case correspondante
+    const container = document.getElementById(`pions-case-${player.position}`);
+    if (container) {
+      container.appendChild(token);
+    }
   });
 }
 
-function roll(){
-  socket.emit("rollDice",roomId);
+function rollDice(){
+  socket.emit('rollDice', roomId);
 }
 
-function buy(){
-  socket.emit("buy",roomId);
+function addLog(message){
+  const log = document.getElementById('log');
+  const p = document.createElement('p');
+  p.innerText = message;
+  log.prepend(p);
 }
-
 </script>
 
 </body>
