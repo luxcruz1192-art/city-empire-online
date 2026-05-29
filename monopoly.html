@@ -13,46 +13,51 @@
     h1 { text-align: center; margin-bottom: 15px; color: #facc15; font-size: 2rem; }
 
     .menu { max-width: 400px; width: 100%; margin: auto; background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid #334155; }
-    input, button { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: none; font-size: 1rem; }
-    input { background: #0f172a; color: white; border: 2px solid #475569; }
+    input, button, select { width: 100%; padding: 12px; margin-top: 15px; border-radius: 10px; border: none; font-size: 1rem; }
+    input, select { background: #0f172a; color: white; border: 2px solid #475569; }
     button { background: #facc15; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
     button:hover { background: #e2b80d; }
     button:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .game { display: none; gap: 20px; justify-content: center; align-items: center; max-width: 95vw; width: 100%; }
-    .board { width: min(78vh, 78vw); height: min(78vh, 78vw); background: #cbd5e1; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); border: 6px solid #1e293b; border-radius: 8px; }
+    .board { width: min(78vh, 78vw); height: min(78vh, 78vw); background: #cbd5e1; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); border: 6px solid #1e293b; border-radius: 8px; position: relative; }
 
-    .center { grid-column: 2 / 11; grid-row: 2 / 11; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 10px; text-align: center; position: relative; overflow: hidden; }
+    .center { grid-column: 2 / 11; grid-row: 2 / 11; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; padding: 10px; text-align: center; position: relative; overflow-y: auto; }
     .center h2 { font-size: min(3vh, 3vw); color: #facc15; }
 
     .jail-controls { margin-top: 10px; display: none; gap: 8px; flex-direction: column; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; width: 90%; }
     .jail-btn { padding: 8px; font-size: 0.85rem; background: #e11d48; color: white; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
-    .jail-btn:hover { background: #be123c; }
 
     .deed-card { background: white; color: #0f172a; width: 85%; height: 90%; border: 2px solid #0f172a; border-radius: 8px; padding: 8px; display: none; flex-direction: column; text-align: left; box-shadow: 0 10px 20px rgba(0,0,0,0.5); font-size: min(1.3vh, 1.3vw); }
     .deed-header { width: 100%; text-align: center; padding: 6px; font-weight: bold; font-size: min(1.6vh, 1.6vw); border: 1px solid black; color: white; text-transform: uppercase; border-radius: 4px; }
     .deed-title { font-weight: bold; text-align: center; margin: 5px 0; font-size: min(1.4vh, 1.4vw); text-transform: uppercase; }
-    .deed-row { display: flex; justify-content: space-between; margin: 2px 0; padding-bottom: 1px; border-bottom: 1px dashed #cbd5e1; }
+    .deed-row { display: flex; justify-content: space-between; margin: 2px 0; }
     .deed-btn-row { display: flex; gap: 5px; margin-top: auto; }
-    .deed-btn { padding: 6px; font-size: 11px; margin-top: 5px; cursor: pointer; border-radius: 5px; font-weight: bold; background: #3b82f6; color: white; }
+    .deed-btn { padding: 6px; font-size: 11px; cursor: pointer; border-radius: 5px; font-weight: bold; background: #3b82f6; color: white; }
     .deed-btn.danger { background: #ef4444; }
     .deed-btn.close { background: #64748b; }
 
+    /* STYLE DE L'INTERFACE D'ÉCHANGE */
+    .trade-manager-view { background: #1e293b; color: white; width: 95%; height: 95%; padding: 10px; display: none; flex-direction: column; text-align: left; border-radius: 10px; font-size: 12px; overflow-y: auto; }
+    .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+    .trade-box { background: #0f172a; padding: 8px; border-radius: 6px; border: 1px solid #334155; }
+    .trade-box h4 { color: #facc15; margin-bottom: 5px; }
+    .props-list-select { height: 70px; overflow-y: auto; background: #1e293b; border: 1px solid #475569; padding: 3px; border-radius: 4px; margin-top: 5px; }
+    .props-list-select label { display: block; padding: 2px; font-size: 11px; cursor: pointer; }
+
     .dice-area { display: flex; gap: min(2vh, 2vw); margin-top: 10px; }
-    .dice { width: min(6vh, 6vw); height: min(6vh, 6vw); background-color: white; color: #0f172a; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: min(3.5vh, 3.5vw); font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .dice { width: min(6vh, 6vw); height: min(6vh, 6vw); background-color: white; color: #0f172a; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: min(3.5vh, 3.5vw); font-weight: bold; }
     .rolling { animation: roll 0.4s infinite linear; }
+    @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     .tile { border: 1px solid #94a3b8; background: #f8fafc; color: #0f172a; font-size: min(0.9vh, 0.9vw); font-weight: bold; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; padding: 2px; overflow: hidden; cursor: pointer; position: relative; }
-    .tile:hover { filter: brightness(0.9); }
     .tile-color { width: 100%; height: 18%; border-bottom: 1px solid #94a3b8; }
-    .tile-name { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+    .tile-name { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .tile-price { color: #64748b; font-style: italic; }
     .building-badge { position: absolute; top: 2px; right: 2px; background: #10b981; color: white; padding: 1px 3px; border-radius: 3px; font-size: 7px; font-weight: bold; }
 
     .tile.owned { color: #ffffff !important; }
     .tile.owned .tile-price { color: rgba(255,255,255,0.9) !important; font-size: 7px; }
-    .tile.mortgaged { background: #64748b !important; color: #cbd5e1 !important; border: 2px dashed #0f172a; }
 
     .pions-container { display: flex; gap: 2px; justify-content: center; align-items: center; width: 100%; min-height: 20%; }
     .player-token { width: min(1.4vh, 1.4vw); height: min(1.4vh, 1.4vw); border-radius: 50%; border: 1.5px solid white; }
@@ -60,7 +65,7 @@
     .sidebar { width: 320px; display: flex; flex-direction: column; gap: 15px; }
     .panel { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; }
     .panel h3 { border-bottom: 2px solid #334155; padding-bottom: 5px; margin-bottom: 10px; color: #facc15; }
-    .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #334155; }
+    .player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
     .player-row.active-turn { background: rgba(250, 204, 21, 0.1); border-left: 3px solid #facc15; padding-left: 5px; }
     .player-info { display: flex; align-items: center; gap: 8px; }
     .player-dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -107,30 +112,75 @@
         <div class="deed-title" id="deed-title-ui">Nom de la rue</div>
         
         <div id="deed-rents-block">
-          <div class="deed-row"><strong>Loyer Terrain Nu :</strong> <span id="deed-r0">0$</span></div>
-          <div class="deed-row" style="color: #16a34a;"><strong>Avec Monopole (Nu x2) :</strong> <span id="deed-r1">0$</span></div>
-          <div class="deed-row"><strong>Avec 1 Maison :</strong> <span id="deed-r2">0$</span></div>
-          <div class="deed-row"><strong>Avec 2 Maisons :</strong> <span id="deed-r3">0$</span></div>
-          <div class="deed-row"><strong>Avec 3 Maisons :</strong> <span id="deed-r4">0$</span></div>
-          <div class="deed-row"><strong>Avec 4 Maisons :</strong> <span id="deed-r5">0$</span></div>
-          <div class="deed-row" style="font-weight: bold; color: #dc2626;"><strong>Avec HÔTEL :</strong> <span id="deed-r6">0$</span></div>
-          <div class="deed-row" style="margin-top: 5px; border-top: 1px solid black;"><strong>Prix de la maison :</strong> <span id="deed-house-cost">0$</span></div>
+          <div class="deed-row"><strong>Terrain Nu :</strong> <span id="deed-r0">0$</span></div>
+          <div class="deed-row" style="color: #16a34a;"><strong>Monopole (Nu x2) :</strong> <span id="deed-r1">0$</span></div>
+          <div class="deed-row"><strong>1 Maison :</strong> <span id="deed-r2">0$</span></div>
+          <div class="deed-row"><strong>2 Maisons :</strong> <span id="deed-r3">0$</span></div>
+          <div class="deed-row"><strong>3 Maisons :</strong> <span id="deed-r4">0$</span></div>
+          <div class="deed-row"><strong>4 Maisons :</strong> <span id="deed-r5">0$</span></div>
+          <div class="deed-row" style="font-weight: bold; color: #dc2626;"><strong>HÔTEL :</strong> <span id="deed-r6">0$</span></div>
+          <div class="deed-row" style="margin-top: 3px; border-top: 1px solid black;"><strong>Prix de la maison :</strong> <span id="deed-house-cost">0$</span></div>
         </div>
 
         <div id="deed-station-block" style="display:none;">
           <p style="font-weight:bold; text-align:center; margin-bottom:5px;">🚊 TARIF DES GARES</p>
-          <div class="deed-row"><span>Si vous possédez 1 Gare :</span> <span>25$</span></div>
-          <div class="deed-row"><span>Si vous possédez 2 Gares :</span> <span>50$</span></div>
-          <div class="deed-row"><span>Si vous possédez 3 Gares :</span> <span>100$</span></div>
-          <div class="deed-row"><span>Si vous possédez 4 Gares :</span> <span>200$</span></div>
+          <div class="deed-row"><span>1 Gare :</span> <span>25$</span></div>
+          <div class="deed-row"><span>2 Gares :</span> <span>50$</span></div>
+          <div class="deed-row"><span>3 Gares :</span> <span>100$</span></div>
+          <div class="deed-row"><span>4 Gares :</span> <span>200$</span></div>
         </div>
         
-        <div class="deed-row" style="margin-top:5px;"><strong>Valeur d'Hypothèque :</strong> <span id="deed-mortgage-val">0$</span></div>
+        <div class="deed-row" style="margin-top:5px;"><strong>Valeur de Revente (1/2 prix) :</strong> <span id="deed-mortgage-val">0$</span></div>
         
         <div class="deed-btn-row">
           <button class="deed-btn" id="deed-build-btn">Bâtir 🏠</button>
-          <button class="deed-btn danger" id="deed-mortgage-btn">Hypothéquer 🏦</button>
-          <button class="deed-btn close" onclick="closeDeedView()">Fermer ❌</button>
+          <button class="deed-btn danger" id="deed-mortgage-btn">Revendre Banque 🏦</button>
+          <button class="deed-btn close" onclick="closeCenterViews()">Fermer ❌</button>
+        </div>
+      </div>
+
+      <div class="trade-manager-view" id="trade-manager-view">
+        <h3 style="color:#facc15; text-align:center;">🤝 PROPOSER UN ÉCHANGE</h3>
+        <label style="margin-top:5px; display:block;">Choisir un joueur :</label>
+        <select id="trade-target-player" onchange="updateTradePropsLists()" style="padding:5px; margin-top:3px;"></select>
+
+        <div class="trade-grid">
+          <div class="trade-box">
+            <h4>Ce que vous donnez :</h4>
+            <input type="number" id="trade-offer-money" placeholder="Argent $" style="padding:5px; margin:0; font-size:12px;">
+            <div class="props-list-select" id="my-props-trade-list"></div>
+          </div>
+          <div class="trade-box">
+            <h4>Ce que vous demandez :</h4>
+            <input type="number" id="trade-demand-money" placeholder="Argent $" style="padding:5px; margin:0; font-size:12px;">
+            <div class="props-list-select" id="their-props-trade-list"></div>
+          </div>
+        </div>
+
+        <div class="deed-btn-row" style="margin-top:10px;">
+          <button class="deed-btn" onclick="submitTradeProposal()" style="background:#10b981;">Envoyer l'offre</button>
+          <button class="deed-btn close" onclick="closeCenterViews()">Annuler ❌</button>
+        </div>
+      </div>
+
+      <div class="trade-manager-view" id="trade-incoming-view">
+        <h3 style="color:#facc15; text-align:center;">📩 OFFRE D'ÉCHANGE REÇUE</h3>
+        <p id="trade-incoming-text" style="margin:8px 0; text-align:center; font-weight:bold;"></p>
+        
+        <div class="trade-grid">
+          <div class="trade-box">
+            <h4>Vous recevez :</h4>
+            <p id="trade-inc-receive-text" style="font-size:11px; color:#10b981;"></p>
+          </div>
+          <div class="trade-box">
+            <h4>On vous demande :</h4>
+            <p id="trade-inc-demand-text" style="font-size:11px; color:#ef4444;"></p>
+          </div>
+        </div>
+
+        <div class="deed-btn-row" style="margin-top:15px;" id="trade-incoming-btns">
+          <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId); closeCenterViews();" style="background:#10b981; font-size:13px;">Accepter l'Échange</button>
+          <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); closeCenterViews();" style="font-size:13px;">Refuser</button>
         </div>
       </div>
 
@@ -145,6 +195,7 @@
     <div class="panel">
       <button id="roll-btn" onclick="actionDice()" style="margin-top:0;">🎲 Lancer les dés</button>
       <button id="buy-btn" style="background:#10b981; color:white;" onclick="buyProperty()">💰 Acheter la case</button>
+      <button id="trade-open-btn" style="background:#a855f7; color:white; margin-top:10px;" onclick="openTradeManager()">🤝 Proposer Échange</button>
     </div>
     <div class="panel">
       <h3>📜 Journal</h3>
@@ -258,6 +309,37 @@ socket.on('gameState', state => { gameState = state; render(); });
 socket.on('log', message => addLog(message));
 socket.on('diceRolled', data => animateDice(data.d1, data.d2));
 
+// RÉCEPTION DU SIGNAL D'ÉCHANGE
+socket.on('tradeProposed', trade => {
+  if (!gameState) return;
+  document.getElementById('default-center-view').style.display = 'none';
+  document.getElementById('deed-card-view').style.display = 'none';
+  document.getElementById('trade-manager-view').style.display = 'none';
+
+  const incView = document.getElementById('trade-incoming-view');
+  incView.style.display = 'flex';
+
+  document.getElementById('trade-incoming-text').innerText = `${trade.senderName} vous propose un marché !`;
+
+  // Traduction visuelle du contenu reçu / demandé
+  let recPropsText = trade.offerProps.map(idx => monopolyData[idx].name).join(', ') || 'Aucune carte';
+  let demPropsText = trade.demandProps.map(idx => monopolyData[idx].name).join(', ') || 'Aucune carte';
+
+  document.getElementById('trade-inc-receive-text').innerHTML = `💵 ${trade.offerMoney}$<br>🏢 ${recPropsText}`;
+  document.getElementById('trade-inc-demand-text').innerHTML = `💵 ${trade.demandMoney}$<br>🏢 ${demPropsText}`;
+
+  // Cacher les boutons de validation si on n'est pas le destinataire ciblé
+  const btnsBlock = document.getElementById('trade-incoming-btns');
+  if (socket.id === trade.receiverId) {
+    btnsBlock.innerHTML = `
+      <button class="deed-btn" onclick="socket.emit('acceptTrade', roomId); closeCenterViews();" style="background:#10b981; font-size:13px;">Accepter</button>
+      <button class="deed-btn danger" onclick="socket.emit('rejectTrade', roomId); closeCenterViews();" style="font-size:13px;">Refuser</button>
+    `;
+  } else {
+    btnsBlock.innerHTML = `<p style="font-style:italic; font-size:11px; text-align:center; width:100%;">En attente de la réponse de ${trade.receiverName}...</p>`;
+  }
+});
+
 function animateDice(v1, v2) {
   const area = document.getElementById('dice-area');
   const d1 = document.getElementById('dice1');
@@ -281,7 +363,11 @@ function openDeedView(index) {
   const item = monopolyData[index];
   if (item.price === 0) return;
 
+  // Ferme les autres vues centrales
   document.getElementById('default-center-view').style.display = 'none';
+  document.getElementById('trade-manager-view').style.display = 'none';
+  document.getElementById('trade-incoming-view').style.display = 'none';
+
   const card = document.getElementById('deed-card-view');
   card.style.display = 'flex';
 
@@ -315,19 +401,92 @@ function openDeedView(index) {
 
   if (gameState) {
     const isOwner = (gameState.owners[index] === socket.id);
-    const isMortgaged = gameState.mortgaged[index];
     
-    mortgageBtn.disabled = !isOwner || (gameState.buildings[index] > 0);
-    mortgageBtn.innerText = isMortgaged ? "Lever Hypothèque 🔓" : "Hypothéquer 🏦";
-    mortgageBtn.onclick = () => { socket.emit('toggleMortgage', { roomId, tileIndex: index }); closeDeedView(); };
+    mortgageBtn.disabled = !isOwner;
+    mortgageBtn.onclick = () => { socket.emit('toggleMortgage', { roomId, tileIndex: index }); closeCenterViews(); };
 
-    buildBtn.disabled = !isOwner || isMortgaged || !item.housePrice || (gameState.buildings[index] >= 5);
-    buildBtn.onclick = () => { socket.emit('buildHouse', { roomId, tileIndex: index }); closeDeedView(); };
+    buildBtn.disabled = !isOwner || !item.housePrice || (gameState.buildings[index] >= 5);
+    buildBtn.onclick = () => { socket.emit('buildHouse', { roomId, tileIndex: index }); closeCenterViews(); };
   }
 }
 
-function closeDeedView() {
+// MANAGEMENT DES INTERFACES D'ÉCHANGES
+function openTradeManager() {
+  if(!gameState || !gameState.gameStarted) return alert("La partie n'a pas commencé !");
+  
+  document.getElementById('default-center-view').style.display = 'none';
   document.getElementById('deed-card-view').style.display = 'none';
+  document.getElementById('trade-incoming-view').style.display = 'none';
+  document.getElementById('trade-manager-view').style.display = 'flex';
+
+  const selectPlayers = document.getElementById('trade-target-player');
+  selectPlayers.innerHTML = '';
+
+  // Remplir le select avec les adversaires dispos
+  let count = 0;
+  gameState.players.forEach(p => {
+    if(p.id !== socket.id) {
+      count++;
+      selectPlayers.innerHTML += `<option value="${p.id}">${p.username}</option>`;
+    }
+  });
+
+  if(count === 0) {
+    alert("Pas assez de joueurs pour échanger !");
+    closeCenterViews();
+    return;
+  }
+
+  updateTradePropsLists();
+}
+
+function updateTradePropsLists() {
+  const targetId = document.getElementById('trade-target-player').value;
+  const myListDiv = document.getElementById('my-props-trade-list');
+  const theirListDiv = document.getElementById('their-props-trade-list');
+
+  myListDiv.innerHTML = '';
+  theirListDiv.innerHTML = '';
+
+  // Parcourir toutes les cases possédées
+  for(let tileIndex in gameState.owners) {
+    const idx = parseInt(tileIndex);
+    const ownerId = gameState.owners[tileIndex];
+    const name = monopolyData[idx].name;
+
+    if(ownerId === socket.id) {
+      myListDiv.innerHTML += `<label><input type="checkbox" value="${idx}" class="my-trade-checkbox"> ${name}</label>`;
+    } else if(ownerId === targetId) {
+      theirListDiv.innerHTML += `<label><input type="checkbox" value="${idx}" class="their-trade-checkbox"> ${name}</label>`;
+    }
+  }
+}
+
+function submitTradeProposal() {
+  const targetPlayerId = document.getElementById('trade-target-player').value;
+  const offerMoney = document.getElementById('trade-offer-money').value || 0;
+  const demandMoney = document.getElementById('trade-demand-money').value || 0;
+
+  const offerProps = [];
+  document.querySelectorAll('.my-trade-checkbox:checked').forEach(cb => offerProps.push(parseInt(cb.value)));
+  
+  const demandProps = [];
+  document.querySelectorAll('.their-trade-checkbox:checked').forEach(cb => demandProps.push(parseInt(cb.value)));
+
+  socket.emit('initiateTrade', {
+    roomId,
+    targetPlayerId,
+    offerMoney,
+    demandMoney,
+    offerProps,
+    demandProps
+  });
+}
+
+function closeCenterViews() {
+  document.getElementById('deed-card-view').style.display = 'none';
+  document.getElementById('trade-manager-view').style.display = 'none';
+  document.getElementById('trade-incoming-view').style.display = 'none';
   document.getElementById('default-center-view').style.display = 'flex';
 }
 
@@ -340,17 +499,25 @@ function render() {
   const startBtn = document.getElementById('start-btn-center');
   if (gameState.gameStarted) {
     startBtn.style.display = 'none';
+    document.getElementById('trade-open-btn').style.display = 'block';
   } else {
     startBtn.style.display = (gameState.creatorId === socket.id) ? 'block' : 'none';
+    document.getElementById('trade-open-btn').style.display = 'none';
   }
 
+  // RAZ Affichages des prix
   monopolyData.forEach((data, index) => {
     const tile = document.getElementById(`tile-${index}`);
     const priceLabel = document.getElementById(`price-label-${index}`);
     tile.className = 'tile';
-    if(priceLabel && data.price > 0) priceLabel.innerText = `${data.price}$`;
+    tile.style.backgroundColor = '#f8fafc';
+    if(priceLabel && data.price > 0) {
+      priceLabel.innerText = `${data.price}$`;
+      priceLabel.style.color = '#64748b';
+    }
   });
 
+  // Coloration dynamique des propriétaires
   for (let tileIndex in gameState.owners) {
     const ownerObj = gameState.players.find(p => p.id === gameState.owners[tileIndex]);
     const tile = document.getElementById(`tile-${tileIndex}`);
@@ -359,15 +526,13 @@ function render() {
     if (tile && ownerObj) {
       tile.classList.add('owned');
       tile.style.backgroundColor = ownerObj.color;
-      if (priceLabel) priceLabel.innerText = `Pr. ${ownerObj.username}`;
-
-      if (gameState.mortgaged[tileIndex]) {
-        tile.classList.add('mortgaged');
-        if (priceLabel) priceLabel.innerText = `⚠️ HYPOTHÉQUÉ`;
+      if (priceLabel) {
+        priceLabel.innerText = `Pr. ${ownerObj.username}`;
+        priceLabel.style.color = 'white';
       }
 
       const nbBuildings = gameState.buildings[tileIndex] || 0;
-      if (nbBuildings > 0 && !gameState.mortgaged[tileIndex]) {
+      if (nbBuildings > 0) {
         const badge = document.createElement('div');
         badge.className = 'building-badge';
         badge.innerText = nbBuildings === 5 ? "🏨 Htl" : `🏠 ${nbBuildings}`;
@@ -395,7 +560,6 @@ function render() {
       jailBox.style.display = 'none';
     }
     
-    // CONFIGURATION DYNAMIQUE DU BOUTON (LANCER vs FIN DE TOUR)
     if (isMyTurn) {
       rollBtn.disabled = false;
       if (gameState.hasRolled) {
@@ -442,7 +606,6 @@ function render() {
     const isMyTurn = (activePlayer.id === socket.id);
     const hasOwner = gameState.owners[mySelf.position];
 
-    // Tu ne peux acheter QUE si c'est ton tour ET que tu as déjà lancé les dés
     if (currentTileData.price > 0 && !hasOwner) {
       buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
       buyBtn.disabled = !isMyTurn || !gameState.hasRolled || (mySelf.money < currentTileData.price);
@@ -456,14 +619,11 @@ function render() {
   }
 }
 
-// FONCTION MODIFIÉE : Gère soit le lancer, soit le passage de tour
 function actionDice() {
   if (!gameState) return;
   if (gameState.hasRolled) {
-    // Si on a déjà lancé, le clic passe au joueur suivant
     socket.emit('nextTurn', roomId);
   } else {
-    // Sinon on lance les dés
     socket.emit('rollDice', roomId);
   }
 }
