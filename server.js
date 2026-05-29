@@ -13,16 +13,14 @@ app.get('/', (req, res) => {
 });
 
 const rooms = {};
-
 const colors = ['#ef4444', '#3b82f6', '#10b981', '#eab308', '#a855f7', '#f97316', '#ec4899', '#06b6d4', '#84cc16', '#64748b'];
 
-// Base de données simplifiée des propriétés pour gérer les prix et loyers
 const boardProperties = [
   { name: "DÉPART", price: 0, rent: 0, type: "special" },
   { name: "Boulevard de Belleville", price: 60, rent: 2, type: "prop" },
   { name: "Caisse de Communauté", price: 0, rent: 0, type: "special" },
   { name: "Rue de Lecourbe", price: 60, rent: 4, type: "prop" },
-  { name: "Impôt sur le Revenu", price: 0, rent: 200, type: "tax" }, // Taxe directe
+  { name: "Impôt sur le Revenu", price: 0, rent: 200, type: "tax" },
   { name: "Gare Montparnasse", price: 200, rent: 25, type: "station" },
   { name: "Rue de Vaugirard", price: 100, rent: 6, type: "prop" },
   { name: "Chance", price: 0, rent: 0, type: "special" },
@@ -61,27 +59,31 @@ const boardProperties = [
 ];
 
 io.on('connection', socket => {
-  console.log(`Joueur connecté : ${socket.id}`);
-
   socket.on('joinRoom', data => {
     const { username, roomId } = data;
     if (!username || !roomId) return;
 
     socket.join(roomId);
-    socket.roomId = roomId; // On stocke la room dans le socket pour la déconnexion
+    socket.roomId = roomId;
 
     if (!rooms[roomId]) {
       rooms[roomId] = {
         players: [],
         currentPlayer: 0,
-        owners: {} // Stocke qui possède quelle case: { "caseIndex": "socketId" }
+        owners: {},
+        gameStarted: false, // Bloque le jeu au début
+        creatorId: socket.id // Le premier joueur devient le chef de salle
       };
     }
 
     const room = rooms[roomId];
 
+    if (room.gameStarted) {
+      socket.emit('log', 'La partie a déjà commencé dans cette salle.');
+      return;
+    }
     if (room.players.length >= 10) {
-      socket.emit('log', 'La salle est pleine (max 10 joueurs).');
+      socket.emit('log', 'La salle est pleine.');
       return;
     }
 
@@ -94,50 +96,58 @@ io.on('connection', socket => {
     });
 
     io.to(roomId).emit('gameState', room);
-    io.to(roomId).emit('log', `${username} a rejoint la partie 🚪`);
+    io.to(roomId).emit('log', `${username} a rejoint le salon 🚪`);
+  });
+
+  // Action de lancer la partie (Seul le créateur peut)
+  socket.on('startGame', roomId => {
+    const room = rooms[roomId];
+    if (!room) return;
+    if (room.creatorId !== socket.id) {
+      socket.emit('log', "Seul le créateur du salon peut lancer la partie ! 🛑");
+      return;
+    }
+    if (room.players.length < 2) {
+      socket.emit('log', "Il faut au moins 2 joueurs pour démarrer ! 👥");
+      return;
+    }
+
+    room.gameStarted = true;
+    io.to(roomId).emit('gameState', room);
+    io.to(roomId).emit('log', "🎮 La partie commence ! Que le meilleur gagne !");
   });
 
   socket.on('rollDice', roomId => {
     const room = rooms[roomId];
-    if (!room || room.players.length === 0) return;
+    if (!room || !room.gameStarted) return;
 
     const activePlayer = room.players[room.currentPlayer];
-
-    // SÉCURITÉ : On vérifie si c'est bien ce joueur qui a cliqué
     if (activePlayer.id !== socket.id) {
       socket.emit('log', "Ce n'est pas ton tour ! ⏳");
       return;
     }
 
-    // Lancer de 2 dés
     const d1 = Math.floor(Math.random() * 6) + 1;
     const d2 = Math.floor(Math.random() * 6) + 1;
     const totalDice = d1 + d2;
 
     activePlayer.position += totalDice;
 
-    // Passage par la case départ
     if (activePlayer.position >= 40) {
       activePlayer.position -= 40;
       activePlayer.money += 200;
       io.to(roomId).emit('log', `${activePlayer.username} passe par la case DÉPART et reçoit 200$ 💰`);
     }
 
-    const currentTileIndex = activePlayer.position;
-    const currentTile = boardProperties[currentTileIndex];
+    const currentTile = boardProperties[activePlayer.position];
+    io.to(roomId).emit('log', `${activePlayer.username} fait ${totalDice} et arrive sur : ${currentTile.name}`);
 
-    io.to(roomId).emit('log', `${activePlayer.username} fait un ${totalDice} (${d1}+${d2}) et arrive sur : ${currentTile.name}`);
-
-    // --- LOGIQUE DES TAXES ET LOYERS ---
+    // Logique taxes et loyers
     if (currentTile.type === 'tax') {
-      // C'est une case taxe
       activePlayer.money -= currentTile.rent;
       io.to(roomId).emit('log', `${activePlayer.username} paye ${currentTile.rent}$ de taxes. 💸`);
-    } else if (room.owners[currentTileIndex] && room.owners[currentTileIndex] !== activePlayer.id) {
-      // La case appartient à quelqu'un d'autre -> Loyer automatique
-      const ownerId = room.owners[currentTileIndex];
-      const owner = room.players.find(p => p.id === ownerId);
-
+    } else if (room.owners[activePlayer.position] && room.owners[activePlayer.position] !== activePlayer.id) {
+      const owner = room.players.find(p => p.id === room.owners[activePlayer.position]);
       if (owner) {
         activePlayer.money -= currentTile.rent;
         owner.money += currentTile.rent;
@@ -145,57 +155,38 @@ io.on('connection', socket => {
       }
     }
 
-    // Passer au joueur suivant
     room.currentPlayer = (room.currentPlayer + 1) % room.players.length;
-
     io.to(roomId).emit('gameState', room);
   });
 
   socket.on('buyProperty', roomId => {
     const room = rooms[roomId];
-    if (!room) return;
+    if (!room || !room.gameStarted) return;
 
-    // Trouver le joueur dont c'était le tour juste AVANT le changement (celui qui vient de se déplacer)
-    // Comme le compteur a déjà avancé dans rollDice, le joueur qui vient de jouer est (currentPlayer - 1)
     let lastPlayerIndex = room.currentPlayer - 1;
     if (lastPlayerIndex < 0) lastPlayerIndex = room.players.length - 1;
-
     const player = room.players[lastPlayerIndex];
 
-    // Vérification de sécurité
     if (player.id !== socket.id) {
-      socket.emit('log', "Tu ne peux acheter qu'immédiatement après ton lancer de dés !");
+      socket.emit('log', "Tu ne peux acheter qu'immédiatement après ton tour !");
       return;
     }
 
     const tileIndex = player.position;
     const tile = boardProperties[tileIndex];
 
-    // Vérifier si la propriété est achetable
-    if (tile.type === 'special' || tile.type === 'tax') {
-      socket.emit('log', "Cette case ne peut pas être achetée.");
-      return;
-    }
+    if (tile.type === 'special' || tile.type === 'tax' || room.owners[tileIndex]) return;
 
-    // Vérifier si elle est déjà possédée
-    if (room.owners[tileIndex]) {
-      socket.emit('log', "Cette propriété a déjà un propriétaire.");
-      return;
-    }
-
-    // Vérifier l'argent disponible
     if (player.money >= tile.price) {
       player.money -= tile.price;
-      room.owners[tileIndex] = player.id; // Enregistrement du propriétaire
-
+      room.owners[tileIndex] = player.id;
       io.to(roomId).emit('log', `🎉 ${player.username} a acheté ${tile.name} pour ${tile.price}$ !`);
       io.to(roomId).emit('gameState', room);
     } else {
-      socket.emit('log', "Pas assez d'argent pour acheter cette propriété ! 🛑");
+      socket.emit('log', "Pas assez d'argent !");
     }
   });
 
-  // Gérer la déconnexion d'un joueur en cours de partie
   socket.on('disconnect', () => {
     const roomId = socket.roomId;
     if (roomId && rooms[roomId]) {
@@ -206,17 +197,16 @@ io.on('connection', socket => {
         const username = room.players[playerIndex].username;
         room.players.splice(playerIndex, 1);
         
-        // Nettoyer ses propriétés possédées
         for (let key in room.owners) {
-          if (room.owners[key] === socket.id) {
-            delete room.owners[key];
-          }
+          if (room.owners[key] === socket.id) delete room.owners[key];
         }
 
-        // Ajuster l'index du tour actuel
-        if (room.currentPlayer >= room.players.length) {
-          room.currentPlayer = 0;
+        // Si le créateur part, on donne le rôle au joueur suivant
+        if (room.creatorId === socket.id && room.players.length > 0) {
+          room.creatorId = room.players[0].id;
         }
+
+        if (room.currentPlayer >= room.players.length) room.currentPlayer = 0;
 
         io.to(roomId).emit('log', `${username} a quitté la partie.`);
         io.to(roomId).emit('gameState', room);
@@ -226,6 +216,4 @@ io.on('connection', socket => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Serveur lancé sur le port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Serveur lancé sur le port ${PORT}`));
