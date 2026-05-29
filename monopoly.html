@@ -70,7 +70,7 @@
     button {
       width: 100%;
       padding: 14px;
-      margin-top: 20px;
+      margin-top: 15px;
       border: none;
       border-radius: 10px;
       background: #facc15;
@@ -87,6 +87,14 @@
 
     button:active {
       transform: scale(0.98);
+    }
+
+    .btn-buy {
+      background: #10b981;
+      color: white;
+    }
+    .btn-buy:hover {
+      background: #059669;
     }
 
     .game {
@@ -124,6 +132,8 @@
       flex-direction: column;
       color: white;
       position: relative;
+      padding: 20px;
+      text-align: center;
     }
 
     .center h2 {
@@ -135,15 +145,24 @@
 
     .center p {
       font-size: 1.2rem;
-      opacity: 0.8;
+      opacity: 0.9;
       margin-top: 10px;
+    }
+
+    #turn-indicator {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      font-weight: bold;
     }
 
     .tile {
       border: 1px solid #94a3b8;
       background: #f8fafc;
       color: #0f172a;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: bold;
       display: flex;
       flex-direction: column;
@@ -151,40 +170,58 @@
       align-items: center;
       text-align: center;
       position: relative;
-      padding: 4px 2px;
+      padding: 2px;
     }
 
-    /* Bandeau de couleur pour les propriétés */
+    /* Bandeau de couleur pour les groupes */
     .tile-color {
       width: 100%;
-      height: 15px;
+      height: 12px;
       border-bottom: 1px solid #94a3b8;
-      margin-bottom: 2px;
     }
 
     .tile-name {
       flex-grow: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 2px;
       word-break: break-word;
+      line-height: 10px;
+    }
+
+    .tile-price {
+      color: #475569;
+      font-style: italic;
+      margin-top: 1px;
+    }
+
+    /* Indicateur visuel du propriétaire */
+    .tile-owner-bar {
+      width: 100%;
+      height: 6px;
+      margin-top: 2px;
+      font-size: 5px;
+      color: white;
+      line-height: 6px;
+      text-transform: uppercase;
     }
 
     /* Zone d'alignement des pions */
     .pions-container {
       display: flex;
-      gap: 3px;
+      gap: 2px;
       justify-content: center;
       align-items: center;
       width: 100%;
-      min-height: 16px;
+      min-height: 15px;
       margin-top: 2px;
     }
 
     .player-token {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       border: 2px solid white;
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -221,6 +258,12 @@
       border-bottom: 1px solid #334155;
     }
 
+    .player-row.active-turn {
+      background: rgba(250, 204, 21, 0.1);
+      border-left: 4px solid #facc15;
+      padding-left: 6px;
+    }
+
     .player-info {
       display: flex;
       align-items: center;
@@ -234,10 +277,10 @@
     }
 
     .log {
-      height: 200px;
+      height: 180px;
       overflow-y: auto;
       font-family: monospace;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       padding-right: 5px;
     }
 
@@ -248,7 +291,6 @@
       background: rgba(255,255,255,0.05);
     }
 
-    /* Scrollbar custom pour le log */
     .log::-webkit-scrollbar {
       width: 6px;
     }
@@ -274,7 +316,8 @@
   <div class="board" id="board">
     <div class="center">
       <h2>CITY EMPIRE</h2>
-      <p>⚠️ En attente de joueurs...</p>
+      <p id="room-display">Salle : -</p>
+      <div id="turn-indicator">En attente de joueurs...</div>
     </div>
   </div>
 
@@ -287,6 +330,7 @@
 
     <div class="panel">
       <button onclick="rollDice()" style="margin-top:0;">🎲 Lancer les dés</button>
+      <button id="buy-btn" class="btn-buy" onclick="buyProperty()">💰 Acheter la propriété</button>
     </div>
 
     <div class="panel">
@@ -303,72 +347,70 @@
 const socket = io();
 const board = document.getElementById('board');
 
-// Liste officielle simplifiée du Monopoly pour correspondre aux 40 cases
+// Base de données des 40 cases (Doit correspondre exactement au serveur)
 const monopolyData = [
-  { name: "DÉPART", type: "special" },
-  { name: "Bld de Belleville", type: "prop", color: "#955436" },
-  { name: "Caisse de Communauté", type: "special" },
-  { name: "Rue de Lecourbe", type: "prop", color: "#955436" },
-  { name: "Impôt sur le Revenu", type: "tax" },
-  { name: "Gare Montparnasse", type: "station" },
-  { name: "Rue de Vaugirard", type: "prop", color: "#39a4dc" },
-  { name: "Chance", type: "special" },
-  { name: "Rue de Courcelles", type: "prop", color: "#39a4dc" },
-  { name: "Avenue de la République", type: "prop", color: "#39a4dc" },
+  { name: "DÉPART", price: 0, type: "special" },
+  { name: "Boulevard de Belleville", price: 60, type: "prop", color: "#955436" },
+  { name: "Caisse de Communauté", price: 0, type: "special" },
+  { name: "Rue de Lecourbe", price: 60, type: "prop", color: "#955436" },
+  { name: "Impôt sur le Revenu", price: 0, type: "tax" },
+  { name: "Gare Montparnasse", price: 200, type: "station" },
+  { name: "Rue de Vaugirard", price: 100, type: "prop", color: "#39a4dc" },
+  { name: "Chance", price: 0, type: "special" },
+  { name: "Rue de Courcelles", price: 100, type: "prop", color: "#39a4dc" },
+  { name: "Avenue de la République", price: 120, type: "prop", color: "#39a4dc" },
   
-  { name: "PRISON", type: "special" },
-  { name: "Bld de la Villette", type: "prop", color: "#d93a96" },
-  { name: "Compagnie d'Électricité", type: "service" },
-  { name: "Avenue de Neuilly", type: "prop", color: "#d93a96" },
-  { name: "Rue de Paradis", type: "prop", color: "#d93a96" },
-  { name: "Gare de Lyon", type: "station" },
-  { name: "Avenue Mozart", type: "prop", color: "#f29400" },
-  { name: "Caisse de Communauté", type: "special" },
-  { name: "Saint-Michel", type: "prop", color: "#f29400" },
-  { name: "Place Pigalle", type: "prop", color: "#f29400" },
+  { name: "PRISON", price: 0, type: "special" },
+  { name: "Boulevard de la Villette", price: 140, type: "prop", color: "#d93a96" },
+  { name: "Compagnie d'Électricité", price: 150, type: "service" },
+  { name: "Avenue de Neuilly", price: 140, type: "prop", color: "#d93a96" },
+  { name: "Rue de Paradis", price: 160, type: "prop", color: "#d93a96" },
+  { name: "Gare de Lyon", price: 200, type: "station" },
+  { name: "Avenue Mozart", price: 180, type: "prop", color: "#f29400" },
+  { name: "Caisse de Communauté", price: 0, type: "special" },
+  { name: "Saint-Michel", price: 180, type: "prop", color: "#f29400" },
+  { name: "Place Pigalle", price: 200, type: "prop", color: "#f29400" },
   
-  { name: "PARC GRATUIT", type: "special" },
-  { name: "Avenue Matignon", type: "prop", color: "#e2001a" },
-  { name: "Chance", type: "special" },
-  { name: "Avenue de l'Opéra", type: "prop", color: "#e2001a" },
-  { name: "Rue de la Paix", type: "prop", color: "#e2001a" },
-  { name: "Gare du Nord", type: "station" },
-  { name: "Faubourg Saint-Honoré", type: "prop", color: "#fdf100" },
-  { name: "Place de la Bourse", type: "prop", color: "#fdf100" },
-  { name: "Compagnie des Eaux", type: "service" },
-  { name: "Rue La Fayette", type: "prop", color: "#fdf100" },
+  { name: "PARC GRATUIT", price: 0, type: "special" },
+  { name: "Avenue Matignon", price: 220, type: "prop", color: "#e2001a" },
+  { name: "Chance", price: 0, type: "special" },
+  { name: "Avenue de l'Opéra", price: 220, type: "prop", color: "#e2001a" },
+  { name: "Rue de la Paix", price: 240, type: "prop", color: "#e2001a" },
+  { name: "Gare du Nord", price: 200, type: "station" },
+  { name: "Faubourg Saint-Honoré", price: 260, type: "prop", color: "#fdf100" },
+  { name: "Place de la Bourse", price: 260, type: "prop", color: "#fdf100" },
+  { name: "Compagnie des Eaux", price: 150, type: "service" },
+  { name: "Rue La Fayette", price: 280, type: "prop", color: "#fdf100" },
   
-  { name: "ALLEZ EN PRISON", type: "special" },
-  { name: "Avenue de Breteuil", type: "prop", color: "#1fa147" },
-  { name: "Avenue Foch", type: "prop", color: "#1fa147" },
-  { name: "Caisse de Communauté", type: "special" },
-  { name: "Capucines", type: "prop", color: "#1fa147" },
-  { name: "Gare Saint-Lazare", type: "station" },
-  { name: "Chance", type: "special" },
-  { name: "Champs-Élysées", type: "prop", color: "#0066b2" },
-  { name: "Taxe de Luxe", type: "tax" },
-  { name: "Rue de la Paix", type: "prop", color: "#0066b2" }
+  { name: "ALLEZ EN PRISON", price: 0, type: "special" },
+  { name: "Avenue de Breteuil", price: 300, type: "prop", color: "#1fa147" },
+  { name: "Avenue Foch", price: 300, type: "prop", color: "#1fa147" },
+  { name: "Caisse de Communauté", price: 0, type: "special" },
+  { name: "Capucines", price: 320, type: "prop", color: "#1fa147" },
+  { name: "Gare Saint-Lazare", price: 200, type: "station" },
+  { name: "Chance", price: 0, type: "special" },
+  { name: "Champs-Élysées", price: 350, type: "prop", color: "#0066b2" },
+  { name: "Taxe de Luxe", price: 0, type: "tax" },
+  { name: "Rue de la Paix", price: 400, type: "prop", color: "#0066b2" }
 ];
 
-// Coordonnées CSS Grid de ton système de boucle (Bordures du carré 11x11)
+// Positionnement en grille
 const tilePositions = [];
-for(let i=0; i<11; i++) tilePositions.push([10, 10-i]); // Bas (Droite vers Gauche)
-for(let i=1; i<11; i++) tilePositions.push([10-i, 0]);  // Gauche (Bas vers Haut)
-for(let i=1; i<11; i++) tilePositions.push([0, i]);     // Haut (Gauche vers Droite)
-for(let i=1; i<10; i++) tilePositions.push([i, 10]);    // Droite (Haut vers Bas)
+for(let i=0; i<11; i++) tilePositions.push([10, 10-i]);
+for(let i=1; i<11; i++) tilePositions.push([10-i, 0]);
+for(let i=1; i<11; i++) tilePositions.push([0, i]);
+for(let i=1; i<10; i++) tilePositions.push([i, 10]);
 
-const tileElements = [];
-
-// Génération visuelle du plateau
+// Génération graphique initiale du plateau
 monopolyData.forEach((data, index) => {
   const tile = document.createElement('div');
   tile.className = 'tile';
+  tile.id = `tile-box-${index}`;
   
   const pos = tilePositions[index];
   tile.style.gridRow = pos[0] + 1;
   tile.style.gridColumn = pos[1] + 1;
 
-  // Si c'est une propriété, on ajoute une bande de couleur en haut
   if (data.type === 'prop' && data.color) {
     const colorBar = document.createElement('div');
     colorBar.className = 'tile-color';
@@ -376,20 +418,27 @@ monopolyData.forEach((data, index) => {
     tile.appendChild(colorBar);
   }
 
-  // Nom de la case
   const nameDiv = document.createElement('div');
   nameDiv.className = 'tile-name';
-  nameDiv.innerText = data.name;
+  nameDiv.innerHTML = `<span>${data.name}</span>`;
+  if(data.price > 0) {
+    nameDiv.innerHTML += `<span class="tile-price">${data.price}$</span>`;
+  }
   tile.appendChild(nameDiv);
 
-  // Conteneur pour accueillir proprement les futurs pions des joueurs
+  // Barre propriétaire (masquée par défaut)
+  const ownerBar = document.createElement('div');
+  ownerBar.className = 'tile-owner-bar';
+  ownerBar.id = `owner-bar-${index}`;
+  tile.appendChild(ownerBar);
+
+  // Conteneur de pions
   const pionsContainer = document.createElement('div');
   pionsContainer.className = 'pions-container';
   pionsContainer.id = `pions-case-${index}`;
   tile.appendChild(pionsContainer);
 
   board.appendChild(tile);
-  tileElements.push(pionsContainer);
 });
 
 let gameState = null;
@@ -400,6 +449,8 @@ function joinGame(){
   roomId = document.getElementById('room').value.trim();
 
   if(!username || !roomId) return alert("Veuillez remplir les champs !");
+
+  document.getElementById('room-display').innerText = `Salle : ${roomId}`;
 
   socket.emit('joinRoom', { username, roomId });
 
@@ -417,42 +468,101 @@ socket.on('log', message => {
 });
 
 function render() {
-  // 1. Nettoyer les anciens pions du plateau
-  document.querySelectorAll('.player-token').forEach(p => p.remove());
+  if (!gameState) return;
 
-  // 2. Mettre à jour la liste des joueurs à droite
+  // 1. Nettoyer les anciens pions et les anciens affichages de propriétaires
+  document.querySelectorAll('.player-token').forEach(p => p.remove());
+  document.querySelectorAll('.tile-owner-bar').forEach(bar => {
+    bar.style.backgroundColor = 'transparent';
+    bar.innerText = '';
+  });
+
+  // 2. Gérer l'indicateur de tour central
+  const activePlayer = gameState.players[gameState.currentPlayer];
+  const turnIndicator = document.getElementById('turn-indicator');
+  
+  if (gameState.players.length > 0 && activePlayer) {
+    turnIndicator.innerText = `C'est au tour de : ${activePlayer.username}`;
+    turnIndicator.style.borderLeft = `5px solid ${activePlayer.color}`;
+  }
+
+  // 3. Dessiner les propriétaires actuels des propriétés sur le plateau
+  for (let tileIndex in gameState.owners) {
+    const ownerSocketId = gameState.owners[tileIndex];
+    const ownerObj = gameState.players.find(p => p.id === ownerSocketId);
+    
+    if (ownerObj) {
+      const bar = document.getElementById(`owner-bar-${tileIndex}`);
+      if (bar) {
+        bar.style.backgroundColor = ownerObj.color;
+        bar.innerText = "Acheté";
+      }
+    }
+  }
+
+  // 4. Mettre à jour la liste des joueurs (sidebar) et poser leurs pions
   const playersDiv = document.getElementById('players');
   playersDiv.innerHTML = '';
 
-  gameState.players.forEach((player) => {
-    // Ligne dans la sidebar
+  gameState.players.forEach((player, idx) => {
+    // Ajout dans la sidebar
+    const isHisTurn = (idx === gameState.currentPlayer);
     const row = document.createElement('div');
-    row.className = 'player-row';
+    row.className = `player-row ${isHisTurn ? 'active-turn' : ''}`;
     row.innerHTML = `
       <div class="player-info">
         <div class="player-dot" style="background:${player.color}"></div>
-        <span><strong>${player.username}</strong></span>
+        <span><strong>${player.username}</strong> ${isHisTurn ? '🎲' : ''}</span>
       </div>
       <span>💰 ${player.money} $</span>
     `;
     playersDiv.appendChild(row);
 
-    // 3. Dessiner le pion sur le plateau
+    // Dessiner le pion sur la case
     const token = document.createElement('div');
     token.className = 'player-token';
     token.style.backgroundColor = player.color;
-    token.title = player.username; // Affiche le nom au survol
+    token.title = player.username;
 
-    // On l'ajoute dans le conteneur de pions de la case correspondante
     const container = document.getElementById(`pions-case-${player.position}`);
     if (container) {
       container.appendChild(token);
     }
   });
+
+  // 5. Mettre à jour dynamiquement le texte du bouton d'achat en fonction de la position du joueur local
+  // On récupère ton propre pion pour savoir le prix de ta case actuelle
+  const mySelf = gameState.players.find(p => p.id === socket.id);
+  const buyBtn = document.getElementById('buy-btn');
+  if (mySelf) {
+    const currentPos = mySelf.position;
+    const currentTileData = monopolyData[currentPos];
+    
+    if (currentTileData.price > 0) {
+      // Si la case a déjà un propriétaire
+      if (gameState.owners[currentPos]) {
+        buyBtn.innerText = "Déjà possédé 🏠";
+        buyBtn.disabled = true;
+        buyBtn.style.opacity = 0.5;
+      } else {
+        buyBtn.innerText = `💰 Acheter (${currentTileData.price}$)`;
+        buyBtn.disabled = false;
+        buyBtn.style.opacity = 1;
+      }
+    } else {
+      buyBtn.innerText = "Case non achetable";
+      buyBtn.disabled = true;
+      buyBtn.style.opacity = 0.5;
+    }
+  }
 }
 
 function rollDice(){
   socket.emit('rollDice', roomId);
+}
+
+function buyProperty() {
+  socket.emit('buyProperty', roomId);
 }
 
 function addLog(message){
